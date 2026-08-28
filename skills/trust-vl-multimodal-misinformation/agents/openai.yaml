@@ -1,0 +1,4 @@
+interface:
+  display_name: "TRUST-VL Misinformation Detection"
+  short_description: "Evidence-grounded image-text fact checking"
+  default_prompt: "Use $trust-vl-multimodal-misinformation to verify this image and news caption with direct and inverse evidence."
