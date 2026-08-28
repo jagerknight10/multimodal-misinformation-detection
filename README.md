@@ -1,4 +1,4 @@
-# Evidence-Grounded Multimodal Misinformation Detection
+# Multimodal Misinformation Detection
 
 This repository studies whether a structured, evidence-grounded skill can improve multimodal misinformation detection by guiding a vision-language model through the workflow proposed in TRUST-VL.
 
