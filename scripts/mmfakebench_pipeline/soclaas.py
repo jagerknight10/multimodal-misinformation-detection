@@ -130,7 +130,8 @@ class SoCLaaSClient:
         return response
 
     def responses_text(self, prompt, instructions, tools=None,
-                       temperature=0.0, max_output_tokens=1000):
+                       temperature=0.0, max_output_tokens=1000,
+                       tool_choice=None):
         """Text-only Responses call, used for gateway-executed web retrieval."""
         payload = {
             "model": self.model,
@@ -141,6 +142,8 @@ class SoCLaaSClient:
         }
         if tools:
             payload["tools"] = tools
+        if tool_choice is not None:
+            payload["tool_choice"] = tool_choice
         started = time.monotonic()
         response = self._post("responses", payload)
         response["_runtime_seconds"] = round(time.monotonic() - started, 3)

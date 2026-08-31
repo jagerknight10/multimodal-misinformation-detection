@@ -12,11 +12,13 @@ if __package__ in {None, ""}:
     from prompts import BASELINE_INSTRUCTIONS, skill_instructions
     from soclaas import SoCLaaSClient
     from parse import parse_prediction
+    from workflow import retrieve_evidence
 else:
     from .data import load_annotations, resolve_image
     from .prompts import BASELINE_INSTRUCTIONS, skill_instructions
     from .soclaas import SoCLaaSClient
     from .parse import parse_prediction
+    from .workflow import retrieve_evidence
 
 
 def main():
@@ -62,10 +64,14 @@ def main():
     def run_one(index, record):
         image_path = resolve_image(args.image_root, record["image_path"])
         try:
-            response = client.responses(
-                record["text"], str(image_path), instructions, tools,
+            retrieval = retrieve_evidence(client, record["text"], str(image_path), tools)
+            final_instructions = instructions + (
+                "\n\nRetrieved evidence block:\n" + retrieval["retrieved_evidence"]
+            )
+            response = client.chat_completions(
+                record["text"], str(image_path), final_instructions,
                 args.temperature, args.max_output_tokens)
-            raw = client.text_from_response(response)
+            raw = client.text_from_chat_response(response)
             result = parse_prediction(raw)
             result.update({
                 "index": index,
@@ -77,6 +83,10 @@ def main():
                 "ground_truth_class": record.get("fake_cls", "real"),
                 "raw_response": raw,
                 "api_response": response,
+                "image_description": retrieval["image_description"],
+                "retrieved_evidence": retrieval["retrieved_evidence"],
+                "retrieval": {key: value for key, value in retrieval.items()
+                               if key not in {"evidence_api_response"}},
                 "runtime_seconds": response.get("_runtime_seconds"),
                 "usage": response.get("usage"),
                 "error": None,
