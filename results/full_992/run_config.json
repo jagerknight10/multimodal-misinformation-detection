@@ -1,0 +1,17 @@
+{
+  "evidence": "data/evidence/MMFakeBench_1000.jsonl",
+  "image_root": "data/MMFakeBench_val",
+  "sample_count": 992,
+  "excluded_unmatched_evidence_records": 8,
+  "text_evidence_cap": 10,
+  "image_evidence_cap": 10,
+  "conditions": [
+    "baseline",
+    "skill"
+  ],
+  "model": "qwen3-vl:32b",
+  "temperature": 0.0,
+  "max_output_tokens": 1200,
+  "rpm": 10.0,
+  "concurrency": 3
+}
