@@ -1,79 +1,118 @@
-# MMFakeBench evaluation pipeline
+# MMFakeBench paired evaluation
 
-This pipeline does not download MMFakeBench. After the gated files are obtained,
-run it with the split annotation JSON and the directory containing the split's
-`real/` and `fake/` folders.
+This pipeline evaluates the same SoCLaaS vision-language model under two conditions:
 
-Set credentials in the root `.env` file. It is ignored by Git:
+1. `baseline`: image + caption + fixed TRUST-VL evidence.
+2. `skill`: the same image + caption + the same evidence + the TRUST-VL skill.
+
+There are no live web-search calls during evaluation. The released
+[TRUST-VL evidence manifest](https://github.com/YanZehong/TRUST-VL/blob/main/data/eval/MMFakeBench_1000.jsonl)
+is loaded once. Direct evidence is capped at 10 items and inverse evidence at 10 items.
+The `turns` field is excluded so training instructions are not leaked into evaluation.
+
+## Data layout
+
+Obtain the gated validation archive and annotation from the
+[MMFakeBench dataset page](https://huggingface.co/datasets/liuxuannan/MMFakeBench),
+then arrange the images as:
+
+```text
+data/MMFakeBench_val/
+├── real/
+├── fake/
+└── source/MMFakeBench_val.json
+```
+
+The runner joins evidence to validation images by exact caption text. The current
+released evidence file has 8 visual records without an exact caption match; these are
+excluded and recorded in `run_config.json`, leaving 992 aligned records.
+
+## Configuration
+
+Put the SoCLaaS credentials in the root `.env`:
 
 ```bash
 SOCLAAS_BASE_URL=https://soclaas-api.comp.nus.edu.sg
-SOCLAAS_API_KEY=clsk_...
+SOCLAAS_API_KEY=...
 SOCLAAS_MODEL=qwen3-vl:32b
 ```
 
-The pipeline loads `.env` automatically. Existing shell variables take precedence.
+## Commands
 
-Commands may be run either as modules (`python3 -m ...`) or directly by file
-path (`python3 scripts/mmfakebench_pipeline/smoke_test.py ...`).
+Run the six offline tests:
 
-Smoke test with an existing local image:
+```bash
+python3 -m unittest scripts.mmfakebench_pipeline.test_pipeline -v
+```
+
+Run the 8-call smoke test (4 stratified records × 2 conditions):
 
 ```bash
 python3 -m scripts.mmfakebench_pipeline.smoke_test \
-  --image tmp/pdfs/visual/trust.png \
-  --caption "This image shows the TRUST-VL research workflow."
-```
-
-Check authentication and model access:
-
-```bash
-python3 -m scripts.mmfakebench_pipeline.check_api
-```
-
-If the gateway certificate is not trusted on your machine, install/use an
-up-to-date CA bundle or set `SOCLAAS_CA_BUNDLE` explicitly. The client uses
-`certifi` automatically when installed. Avoid `--insecure-tls` except for
-isolated diagnostics.
-
-Run the two conditions on a small sample:
-
-```bash
-python3 -m scripts.mmfakebench_pipeline.run \
+  --evidence data/evidence/MMFakeBench_1000.jsonl \
   --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
-  --image-root data/MMFakeBench_val --condition baseline \
-  --limit 20 --concurrency 5 --output results/val_baseline.jsonl
-
-python3 -m scripts.mmfakebench_pipeline.run \
-  --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
-  --image-root data/MMFakeBench_val --condition skill \
-  --limit 20 --concurrency 3 --output results/val_skill.jsonl
+  --image-root data/MMFakeBench_val \
+  --output-dir results/smoke \
+  --rpm 10 --timeout 240
 ```
 
-Or run both matched conditions with one command:
+Run the full aligned validation (992 × 2 = 1,984 calls):
 
 ```bash
 python3 -m scripts.mmfakebench_pipeline.run_pair \
+  --evidence data/evidence/MMFakeBench_1000.jsonl \
   --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
-  --image-root data/MMFakeBench_val --limit 20 \
-  --concurrency 5 --skill-concurrency 3 --output-dir results/val
+  --image-root data/MMFakeBench_val \
+  --output-dir results/full_992 \
+  --selection first --concurrency 3 --rpm 10 \
+  --timeout 240 --max-retries 1
 ```
 
-Both conditions always receive the SoCLaaS `web_search_preview` tool so the comparison
-uses identical retrieval access. The API key must be authorized for this tool.
-Evaluate a JSONL file with:
+Each condition writes checkpointed JSONL results immediately. The runner records the
+caption, local image path, original evidence path, evidence hash, raw response,
+parsed labels, usage, call start time in SGT, duration, and errors. A call is bounded
+below five minutes; if one exceeds five minutes, new API calls are stopped. Live
+status is written to `results/mmfakebench_status.md`.
+
+Reparse saved responses after parser changes without making API calls:
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.evaluate results/val_skill.jsonl
+python3 -m scripts.mmfakebench_pipeline.reparse \
+  results/full_992/baseline.jsonl results/full_992/baseline_reparsed.jsonl
+python3 -m scripts.mmfakebench_pipeline.reparse \
+  results/full_992/skill.jsonl results/full_992/skill_reparsed.jsonl
 ```
 
-Compare matched conditions:
+Compare matched outputs:
 
 ```bash
 python3 -m scripts.mmfakebench_pipeline.compare \
-  results/val/baseline.jsonl results/val/skill.jsonl
+  results/full_992/baseline_reparsed.jsonl \
+  results/full_992/skill_reparsed.jsonl \
+  --output results/full_992/comparison_reparsed.json
 ```
 
-Each request is independent and bounded-concurrent. Results are appended as
-JSONL immediately, so interrupted jobs can be retained and audited. Do not
-commit the dataset, API key, or raw benchmark images.
+Create a row-by-row side-by-side summary, including both raw responses:
+
+```bash
+python3 -m scripts.mmfakebench_pipeline.summarize_pair \
+  results/full_992/baseline_reparsed.jsonl \
+  results/full_992/skill_reparsed.jsonl \
+  results/full_992/side_by_side_summary.json
+```
+
+## Completed run
+
+The completed run produced 992 rows per condition, 1,984 successful API calls, and
+zero API errors. Two skill responses were truncated before producing parseable labels;
+final paired metrics therefore use the same 990 complete samples:
+
+| Metric | Baseline | Skill | Change |
+|---|---:|---:|---:|
+| Binary accuracy | 75.86% | 76.26% | +0.40 pp |
+| Binary macro-F1 | 0.719 | 0.656 | -0.063 |
+| Four-way accuracy | 51.31% | 51.41% | +0.10 pp |
+| Four-way macro-F1 | 0.456 | 0.519 | +0.063 |
+
+These are benchmark results, not conclusions about general model quality. Inspect
+class-wise metrics and raw responses before interpreting the effect of the skill.

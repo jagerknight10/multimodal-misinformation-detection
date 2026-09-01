@@ -2,12 +2,12 @@
 
 This repository studies whether a structured, evidence-grounded skill can improve multimodal misinformation detection by guiding a vision-language model through the workflow proposed in TRUST-VL.
 
-The planned experiment compares the same model under controlled conditions:
+The implemented experiment compares the same model under controlled conditions:
 
-1. Baseline: image and news caption with standard prompting.
-2. Skill: the same image and caption with the TRUST-VL-inspired verification skill and evidence retrieval.
+1. Baseline: image, news caption, and fixed pre-retrieved TRUST-VL evidence.
+2. Skill: the same image, caption, and evidence with the TRUST-VL-inspired verification skill.
 
-The model, decoding settings, inputs, tool access, and evaluation procedure should remain fixed between runs.
+The model, decoding settings, image inputs, evidence, and evaluation procedure remain fixed between runs. No live web search is performed during either evaluation condition.
 
 ## Repository contents
 
@@ -90,10 +90,21 @@ Each annotation contains fields such as:
 }
 ```
 
-- `gt_answers` is the binary `Real`/`Fake` label.
+- `gt_answers` is the binary ground-truth field (the local validation file uses `True`/`False`; the TRUST-VL evidence manifest uses `real`/`fake`).
 - `fake_cls` is the four-way misinformation-source label.
 
-The first evaluation should use the validation split. Predictions should be saved with the sample ID, baseline/skill condition, final judgment, predicted class, retrieved evidence, tool status, and runtime. Evaluation should report binary and four-way accuracy/F1, per-class metrics, confusion matrices, and results by distortion subtype.
+The first evaluation uses the validation split and the released TRUST-VL evidence manifest. The runner joins the evidence to the local validation images by exact caption text, caps direct and inverse evidence at 10 items each, and excludes the 8 evidence records without an exact caption match. This leaves 992 aligned records and 1,984 calls total: 992 baseline followed by 992 skill calls.
+
+Predictions are checkpointed as JSONL with the sample ID, condition, local image path, evidence hash, raw response, parsed judgment/class, usage, SGT call timestamp, runtime, and errors. The live status file is `results/mmfakebench_status.md`. See [`scripts/mmfakebench_pipeline/README.md`](scripts/mmfakebench_pipeline/README.md) for commands.
+
+The completed run produced the following paired results on 990 samples with parseable outputs in both conditions:
+
+| Metric | Baseline | Skill |
+|---|---:|---:|
+| Binary accuracy | 75.86% | 76.26% |
+| Binary macro-F1 | 0.719 | 0.656 |
+| Four-way accuracy | 51.31% | 51.41% |
+| Four-way macro-F1 | 0.456 | 0.519 |
 
 The MMFakeBench files are gated on Hugging Face. Access and use must follow the authors' [dataset usage terms](https://huggingface.co/datasets/liuxuannan/MMFakeBench).
 
@@ -117,6 +128,4 @@ The project builds on the following work:
 - Wang et al., [Agent Workflow Memory](https://arxiv.org/abs/2409.07429), which motivates representing repeated agent behavior as reusable, abstract workflows.
 
 TRUST-VL’s dataset construction draws on [Factify2](https://arxiv.org/abs/2304.03897), [DGM4](https://openaccess.thecvf.com/content/CVPR2023/html/Shao_Detecting_and_Grounding_Multi-Modal_Media_Manipulation_CVPR_2023_paper.html), [NewsCLIPpings](https://aclanthology.org/2021.emnlp-main.539/), [VisualNews](https://aclanthology.org/2021.emnlp-main.542/), [Fakeddit](https://aclanthology.org/2020.lrec-1.755/), and [LLaVA](https://arxiv.org/abs/2304.08485). These sources should be cited when their datasets or methods are directly used in future experiments.
-
-
 
