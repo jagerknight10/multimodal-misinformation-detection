@@ -152,12 +152,18 @@ class SoCLaaSClient:
     def chat_completions(self, caption, image_path, instructions,
                          temperature=0.0, max_tokens=1200):
         """Vision-preserving fallback using the gateway's low-transformation chat endpoint."""
+        return self.chat_completions_with_evidence(
+            caption, image_path, "", instructions, temperature, max_tokens)
+
+    def chat_completions_with_evidence(self, caption, image_path, evidence, instructions,
+                                       temperature=0.0, max_tokens=1200):
+        """One multimodal judgment call; evidence is passed as ordinary user text."""
         payload = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": instructions},
                 {"role": "user", "content": [
-                    {"type": "text", "text": f"News caption:\n{caption}"},
+                    {"type": "text", "text": f"News caption:\n{caption}\n\n{evidence}"},
                     {"type": "image_url", "image_url": {
                         "url": self.image_data_url(image_path), "detail": "high"
                     }},

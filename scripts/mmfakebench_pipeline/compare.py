@@ -3,48 +3,80 @@ import json
 
 
 def read_rows(path):
-    return {row["index"]: row for row in
-            (json.loads(line) for line in open(path, encoding="utf-8") if line.strip())}
+    rows = {}
+    with open(path, encoding="utf-8") as stream:
+        for line in stream:
+            if line.strip():
+                row = json.loads(line)
+                rows[str(row.get("sample_id", row.get("index")))] = row
+    return rows
 
 
-def accuracy(rows, prediction, truth):
-    pairs = [(row.get(prediction), row.get(truth)) for row in rows if not row.get("error")]
-    pairs = [(p, g) for p, g in pairs if p is not None and g is not None]
-    return sum(p == g for p, g in pairs) / len(pairs) if pairs else None
+def _metrics(pairs, prediction, truth):
+    pairs = [(row.get(prediction), row.get(truth)) for row in pairs
+             if not row.get("error") and row.get(prediction) and row.get(truth)]
+    labels = sorted({p for p, _ in pairs} | {g for _, g in pairs})
+    matrix = {gold: {pred: 0 for pred in labels} for gold in labels}
+    for pred, gold in pairs:
+        matrix[gold][pred] += 1
+    per_class = {}
+    f1s = []
+    for label in labels:
+        tp = matrix[label][label]
+        fp = sum(matrix[other][label] for other in labels if other != label)
+        fn = sum(matrix[label][other] for other in labels if other != label)
+        precision = tp / (tp + fp) if tp + fp else 0.0
+        recall = tp / (tp + fn) if tp + fn else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        f1s.append(f1)
+        per_class[label] = {"precision": precision, "recall": recall, "f1": f1,
+                            "support": tp + fn}
+    return {"n": len(pairs), "accuracy": sum(p == g for p, g in pairs) / len(pairs)
+            if pairs else None, "macro_f1": sum(f1s) / len(f1s) if f1s else None,
+            "per_class": per_class, "confusion_matrix_gold_by_prediction": matrix}
+
+
+def compare_rows(baseline, skill):
+    common = sorted(set(baseline) & set(skill))
+    pairs = [(baseline[key], skill[key]) for key in common]
+    mismatched_hashes = [key for key in common
+                         if baseline[key].get("evidence_hash") != skill[key].get("evidence_hash")]
+    if mismatched_hashes:
+        raise ValueError(f"Evidence differs between conditions for {len(mismatched_hashes)} samples")
+    result = {
+        "baseline_rows": len(baseline), "skill_rows": len(skill), "paired_rows": len(pairs),
+        "binary_accuracy": {
+            "baseline": _metrics([p[0] for p in pairs], "predicted_binary", "ground_truth_binary"),
+            "skill": _metrics([p[1] for p in pairs], "predicted_binary", "ground_truth_binary"),
+        },
+        "four_way": {
+            "baseline": _metrics([p[0] for p in pairs], "predicted_class", "ground_truth_class"),
+            "skill": _metrics([p[1] for p in pairs], "predicted_class", "ground_truth_class"),
+        },
+        "changed_binary_predictions": sum(p[0].get("predicted_binary") != p[1].get("predicted_binary") for p in pairs),
+        "changed_class_predictions": sum(p[0].get("predicted_class") != p[1].get("predicted_class") for p in pairs),
+    }
+    for metric in ("binary_accuracy", "four_way"):
+        result[metric]["delta_accuracy"] = (
+            result[metric]["skill"]["accuracy"] - result[metric]["baseline"]["accuracy"]
+            if result[metric]["skill"]["accuracy"] is not None and result[metric]["baseline"]["accuracy"] is not None
+            else None
+        )
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Compare matched baseline and skill JSONL outputs.")
+    parser = argparse.ArgumentParser(description="Compare matched baseline and skill outputs.")
     parser.add_argument("baseline")
     parser.add_argument("skill")
+    parser.add_argument("--output")
     args = parser.parse_args()
-    baseline, skill = read_rows(args.baseline), read_rows(args.skill)
-    common = sorted(set(baseline) & set(skill))
-    pairs = [{"index": index, "baseline": baseline[index], "skill": skill[index]}
-             for index in common]
-    binary = {
-        "baseline": accuracy([p["baseline"] for p in pairs], "predicted_binary", "ground_truth_binary"),
-        "skill": accuracy([p["skill"] for p in pairs], "predicted_binary", "ground_truth_binary"),
-    }
-    four_way = {
-        "baseline": accuracy([p["baseline"] for p in pairs], "predicted_class", "ground_truth_class"),
-        "skill": accuracy([p["skill"] for p in pairs], "predicted_class", "ground_truth_class"),
-    }
-    print(json.dumps({
-        "baseline_rows": len(baseline), "skill_rows": len(skill), "paired_rows": len(pairs),
-        "binary_accuracy": binary,
-        "binary_accuracy_delta": (binary["skill"] - binary["baseline"]
-                                   if binary["skill"] is not None and binary["baseline"] is not None else None),
-        "four_way_accuracy": four_way,
-        "four_way_accuracy_delta": (four_way["skill"] - four_way["baseline"]
-                                     if four_way["skill"] is not None and four_way["baseline"] is not None else None),
-        "changed_binary_predictions": sum(
-            p["baseline"].get("predicted_binary") != p["skill"].get("predicted_binary") for p in pairs
-        ),
-        "changed_class_predictions": sum(
-            p["baseline"].get("predicted_class") != p["skill"].get("predicted_class") for p in pairs
-        ),
-    }, indent=2))
+    result = compare_rows(read_rows(args.baseline), read_rows(args.skill))
+    encoded = json.dumps(result, indent=2)
+    print(encoded)
+    if args.output:
+        with open(args.output, "w", encoding="utf-8") as stream:
+            stream.write(encoded + "\n")
 
 
 if __name__ == "__main__":

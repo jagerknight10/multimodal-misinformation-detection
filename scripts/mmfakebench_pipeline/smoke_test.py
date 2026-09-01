@@ -1,69 +1,43 @@
+"""Eight-call API smoke test: four representative records, two conditions each."""
+
 import argparse
-import json
-import sys
 from pathlib import Path
 
-if __package__ in {None, ""}:
-    sys.path.insert(0, str(Path(__file__).parent))
-    from prompts import BASELINE_INSTRUCTIONS, skill_instructions
-    from soclaas import SoCLaaSClient
-    from parse import parse_prediction
-else:
-    from .prompts import BASELINE_INSTRUCTIONS, skill_instructions
-    from .soclaas import SoCLaaSClient
-    from .parse import parse_prediction
-
-
-EVIDENCE_INSTRUCTIONS = """Retrieve evidence for the supplied news caption using the
-web_search_preview tool. Search the exact claim and distinctive entities. Return a
-concise evidence brief with source titles, URLs when available, dates, and whether
-each source supports or contradicts the claim. Do not make a final benchmark
-classification. If retrieval fails, say so explicitly."""
-
-IMAGE_DESCRIPTION_INSTRUCTIONS = """Describe only what is visibly present in the supplied
-image. Extract readable text, names, logos, people, places, events, and other
-distinctive clues that could be used for inverse evidence retrieval. Do not judge
-the caption."""
+from .data import load_evidence, select_stratified
+from .runner import run_condition, write_manifest
+from .status import StatusWriter
+from .soclaas import SoCLaaSClient
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Smoke-test SoCLaaS with one local image.")
-    parser.add_argument("--image", required=True)
-    parser.add_argument("--caption", required=True)
-    parser.add_argument("--skill-path")
+    parser = argparse.ArgumentParser(description="Run a four-sample paired SoCLaaS smoke test.")
+    parser.add_argument("--evidence", required=True)
+    parser.add_argument("--annotations", required=True)
+    parser.add_argument("--image-root", required=True)
+    parser.add_argument("--output-dir", default="results/smoke")
+    parser.add_argument("--rpm", type=float, default=10)
+    parser.add_argument("--timeout", type=int, default=240)
+    parser.add_argument("--max-retries", type=int, default=1)
     parser.add_argument("--insecure-tls", action="store_true")
+    parser.add_argument("--status", default="results/mmfakebench_status.md")
     args = parser.parse_args()
-    tools = [{"type": "web_search_preview"}]
+    records = select_stratified(load_evidence(
+        args.evidence, annotations_path=args.annotations, drop_unmatched=True), 4)
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    write_manifest(records, output_dir / "input_manifest.jsonl")
+    status = StatusWriter(args.status)
+    status.start()
     try:
-        client = SoCLaaSClient(insecure_tls=args.insecure_tls)
-        image_response = client.chat_completions(
-            args.caption, args.image, IMAGE_DESCRIPTION_INSTRUCTIONS,
-            max_tokens=500)
-        image_description = client.text_from_chat_response(image_response)
-        evidence_prompt = (
-            f"News caption:\n{args.caption}\n\n"
-            f"Image-derived clues:\n{image_description}"
-        )
-        evidence_response = client.responses_text(
-            evidence_prompt, EVIDENCE_INSTRUCTIONS, tools, max_output_tokens=1000)
-        evidence = client.text_from_response(evidence_response)
-        conditions = (("baseline", BASELINE_INSTRUCTIONS),
-                      ("skill", skill_instructions(args.skill_path)))
-        for condition, instructions in conditions:
-            final_instructions = instructions + f"\n\nRetrieved evidence block:\n{evidence}"
-            response = client.chat_completions(
-                args.caption, args.image, final_instructions, max_tokens=1200)
-            raw = client.text_from_chat_response(response)
-            print(json.dumps({
-                "condition": condition, "model": client.model,
-                "parsed": parse_prediction(raw), "runtime_seconds": response.get("_runtime_seconds"),
-                "usage": response.get("usage"), "response": raw,
-                "image_description": image_description if condition == "baseline" else None,
-                "retrieved_evidence": evidence if condition == "baseline" else None,
-            }, ensure_ascii=False, indent=2))
-    except Exception as exc:
-        print(json.dumps({"error": repr(exc)}))
-        raise SystemExit(1)
+        client = SoCLaaSClient(timeout=args.timeout, max_retries=args.max_retries,
+                               insecure_tls=args.insecure_tls)
+        for condition in ("baseline", "skill"):
+            run_condition(records, condition, args.image_root,
+                          output_dir / f"{condition}.jsonl", status,
+                          rpm=args.rpm, concurrency=1, timeout=args.timeout,
+                          max_retries=args.max_retries, client=client)
+    finally:
+        status.close(phase="finished_smoke", message="Smoke test finished.")
 
 
 if __name__ == "__main__":
