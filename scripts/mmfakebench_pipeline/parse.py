@@ -23,7 +23,7 @@ def parse_prediction(text):
         match = re.match(r"^\s*(?:primary\s+)?class\s*:\s*([^.!]+?)\s*[.!]?\s*$", line)
         if not match:
             continue
-        value = match.group(1).strip().replace(" ", "_")
+        value = match.group(1).strip().replace(" ", "_").replace("-", "_")
         if value in CLASS_NAMES:
             predicted_class = CLASS_NAMES[value]
     if judgment is None:

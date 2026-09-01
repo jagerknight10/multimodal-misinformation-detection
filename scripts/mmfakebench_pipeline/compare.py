@@ -43,15 +43,23 @@ def compare_rows(baseline, skill):
                          if baseline[key].get("evidence_hash") != skill[key].get("evidence_hash")]
     if mismatched_hashes:
         raise ValueError(f"Evidence differs between conditions for {len(mismatched_hashes)} samples")
+    binary_pairs = [(b, s) for b, s in pairs
+                    if not b.get("error") and not s.get("error")
+                    and b.get("predicted_binary") and s.get("predicted_binary")]
+    class_pairs = [(b, s) for b, s in pairs
+                   if not b.get("error") and not s.get("error")
+                   and b.get("predicted_class") and s.get("predicted_class")]
     result = {
         "baseline_rows": len(baseline), "skill_rows": len(skill), "paired_rows": len(pairs),
+        "paired_complete_binary_rows": len(binary_pairs),
+        "paired_complete_four_way_rows": len(class_pairs),
         "binary_accuracy": {
-            "baseline": _metrics([p[0] for p in pairs], "predicted_binary", "ground_truth_binary"),
-            "skill": _metrics([p[1] for p in pairs], "predicted_binary", "ground_truth_binary"),
+            "baseline": _metrics([p[0] for p in binary_pairs], "predicted_binary", "ground_truth_binary"),
+            "skill": _metrics([p[1] for p in binary_pairs], "predicted_binary", "ground_truth_binary"),
         },
         "four_way": {
-            "baseline": _metrics([p[0] for p in pairs], "predicted_class", "ground_truth_class"),
-            "skill": _metrics([p[1] for p in pairs], "predicted_class", "ground_truth_class"),
+            "baseline": _metrics([p[0] for p in class_pairs], "predicted_class", "ground_truth_class"),
+            "skill": _metrics([p[1] for p in class_pairs], "predicted_class", "ground_truth_class"),
         },
         "changed_binary_predictions": sum(p[0].get("predicted_binary") != p[1].get("predicted_binary") for p in pairs),
         "changed_class_predictions": sum(p[0].get("predicted_class") != p[1].get("predicted_class") for p in pairs),
