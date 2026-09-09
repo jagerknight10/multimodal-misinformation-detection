@@ -68,6 +68,44 @@ Irrelevant
 
 Do not convert `Unverified` into `Contradicted`. Do not convert generic evidence into event-level verification.
 
+### Evidence strength
+
+Judge every relevant item on five dimensions:
+
+- **Authority:** primary record, official source, established reporting, named fact-check, anonymous repost, or unknown source.
+- **Independence:** original reporting versus copies of the same claim or source.
+- **Specificity:** exact claim or image-event match versus topical or keyword overlap.
+- **Provenance:** whether the item identifies a source, publication context, date, location, or original caption.
+- **Cross-item agreement:** whether independent items converge or conflict.
+
+Assign an overall strength:
+
+- **Strong:** one authoritative and exact item, or at least two independent reputable items that converge on the material facts.
+- **Moderate:** one reasonably reliable and specific item with no credible conflict, or several partial items that jointly establish the fact.
+- **Weak:** search snippets without enough context, unattributed captions, social reposts, visual resemblance, generic topical overlap, or duplicated claims.
+- **None:** no relevant evidence.
+
+Only strong or moderate evidence can establish a decisive `Supported` or `Contradicted` finding. Weak evidence may guide interpretation but cannot by itself justify `Fake`. If reliable evidence conflicts, use `Conflicting` unless authority, specificity, provenance, and date clearly resolve the conflict. Do not count duplicated results as independent corroboration.
+
+### Decision threshold
+
+- A material failure is **established** when strong evidence, or converging moderate evidence, specifically supports it.
+- A material failure is **plausible but unresolved** when only weak evidence or ambiguous model-based visual cues support it.
+- A check **passes** when the material facts are specifically supported and no equally credible contradiction exists.
+- A check is **unverified** when neither support nor contradiction reaches the threshold.
+
+Do not treat lack of evidence as proof of falsity. In a forced binary benchmark, an item should not be labeled `Fake` solely because a check is unverified. State the uncertainty and decide from the strongest positive evidence available.
+
+## Benchmark evidence mode
+
+When the runner supplies pre-retrieved evidence:
+
+- use only those evidence items and the attached image;
+- do not perform or imply live search;
+- do not assume an evidence item is true merely because it was retrieved;
+- do not use filenames, sample IDs, dataset fields, or likely benchmark construction as evidence;
+- keep direct and inverse evidence separate until reconciliation.
+
 ## Final reconciliation
 
 Evaluate four independent questions:
@@ -85,3 +123,11 @@ Map the primary class as follows:
 - `cross-modal_consistency_distortion`: the text and image are individually plausible but are associated with different people, events, dates, places, or contexts.
 
 If multiple failures are present, record secondary failures and select the primary class according to the strongest evidence and the evaluation label definition. Never hide a secondary failure merely to force a single class.
+
+Use this causal tie-break when multiple failures have comparable evidence:
+
+1. `textual_veracity_distortion` if the material proposition remains false even with an appropriate authentic image.
+2. `visual_veracity_distortion` if the image itself is materially edited, composited, or generated and that visual alteration is the central deception.
+3. `cross_modal_consistency_distortion` if the image is substantially authentic but is attached to the wrong person, event, place, date, or context.
+
+When one candidate has clearly stronger and more specific evidence, choose it over this tie-break and record the others as secondary findings.

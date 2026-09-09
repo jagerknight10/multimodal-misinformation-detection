@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 
 from .data import resolve_image
 from .parse import parse_prediction
-from .prompts import evidence_block, skill_instructions, user_prompt
+from .prompts import evidence_block, instructions_for_condition, prompt_manifest
 from .soclaas import SoCLaaSClient
 
 
@@ -62,18 +62,46 @@ def write_manifest(records, path):
 
 def run_condition(records, condition, image_root, output, status, rpm=10,
                   concurrency=1, max_output_tokens=1200, temperature=0.0,
-                  timeout=240, max_retries=1, skill_path=None,
-                  insecure_tls=False, client=None):
+                  timeout=240, max_retries=1, insecure_tls=False, client=None):
+    condition = "unified" if condition == "skill" else condition
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    prior = _read_successful(output)
-    pending = [row for row in records if row["sample_id"] not in prior]
-    instructions = ("" if condition == "baseline" else skill_instructions(skill_path))
-    if condition == "baseline":
-        from .prompts import BASELINE_INSTRUCTIONS
-        instructions = BASELINE_INSTRUCTIONS
     client = client or SoCLaaSClient(timeout=timeout, max_retries=max_retries,
                                      insecure_tls=insecure_tls)
+    instructions = instructions_for_condition(condition)
+    prompts = prompt_manifest()
+    instructions_hash = prompts["instruction_hashes"][condition]
+    prior = _read_successful(output)
+    records_by_id = {row["sample_id"]: row for row in records}
+    compatible_conditions = {condition}
+    if condition == "unified":
+        compatible_conditions.add("skill")
+    for sample_id, row in prior.items():
+        if row.get("model") != client.model:
+            raise ValueError(
+                f"Cannot resume {output}: saved model {row.get('model')!r} differs "
+                f"from current model {client.model!r}")
+        if row.get("condition") not in compatible_conditions:
+            raise ValueError(
+                f"Cannot resume {output}: it contains condition {row.get('condition')!r}")
+        if row.get("instructions_hash") != instructions_hash:
+            raise ValueError(
+                f"Cannot resume {output}: canonical instructions have changed")
+        if row.get("skill_bundle_hash") != prompts["skill_bundle_hash"]:
+            raise ValueError(
+                f"Cannot resume {output}: canonical skill bundle has changed")
+        current = records_by_id.get(sample_id)
+        if current and row.get("evidence_hash") != current.get("evidence_hash"):
+            raise ValueError(
+                f"Cannot resume {output}: evidence changed for sample {sample_id}")
+        if "temperature" in row and row["temperature"] != temperature:
+            raise ValueError(
+                f"Cannot resume {output}: temperature differs for sample {sample_id}")
+        if ("max_output_tokens" in row
+                and row["max_output_tokens"] != max_output_tokens):
+            raise ValueError(
+                f"Cannot resume {output}: output-token limit differs for sample {sample_id}")
+    pending = [row for row in records if row["sample_id"] not in prior]
     limiter = RateLimiter(rpm)
     stop_event = threading.Event()
     write_lock = threading.Lock()
@@ -98,7 +126,12 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
             "ground_truth_class": record.get("ground_truth_class"),
             "direct_evidence": record["direct_evidence"],
             "inverse_evidence": record["inverse_evidence"],
-            "evidence_hash": record["evidence_hash"], "error": None,
+            "evidence_hash": record["evidence_hash"],
+            "instructions_hash": instructions_hash,
+            "skill_bundle_hash": prompts["skill_bundle_hash"],
+            "temperature": temperature,
+            "max_output_tokens": max_output_tokens,
+            "error": None,
         }
         if stop_event.is_set():
             base["error"] = "stopped_after_call_timeout"

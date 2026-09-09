@@ -1,9 +1,15 @@
-# MMFakeBench paired evaluation
+# MMFakeBench three-condition evaluation
 
-This pipeline evaluates the same SoCLaaS vision-language model under two conditions:
+This pipeline evaluates the same vision-language model under three conditions:
 
 1. `baseline`: image + caption + fixed TRUST-VL evidence.
-2. `skill`: the same image + caption + the same evidence + the TRUST-VL skill.
+2. `unified`: the same inputs + the unified TRUST-VL skill.
+3. `routed`: the same inputs + one internal router and three specialist workflows.
+
+The routed condition remains one API request per sample. Its system instructions
+contain the router plus `Check_textual_factuality`, `Check_visual_manipulation`, and
+`Check_cross_modal_consistency`; the model selects and executes the relevant workflow(s)
+inside that response. It reports the selection in `Selected skills:` for later audit.
 
 There are no live web-search calls during evaluation. The released
 [TRUST-VL evidence manifest](https://github.com/YanZehong/TRUST-VL/blob/main/data/eval/MMFakeBench_1000.jsonl)
@@ -39,38 +45,43 @@ SOCLAAS_MODEL=qwen3-vl:32b
 
 ## Commands
 
-Run the six offline tests:
+Run the ten offline tests (these use a fake client and make no API calls):
 
 ```bash
 python3 -m unittest scripts.mmfakebench_pipeline.test_pipeline -v
 ```
 
-Run the 8-call smoke test (4 stratified records × 2 conditions):
+Run the 12-call smoke test (4 stratified records × 3 conditions):
 
 ```bash
 python3 -m scripts.mmfakebench_pipeline.smoke_test \
   --evidence data/evidence/MMFakeBench_1000.jsonl \
   --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
   --image-root data/MMFakeBench_val \
-  --output-dir results/smoke \
-  --rpm 10 --timeout 240
+  --output-dir results/strong_model_smoke \
+  --rpm 10 --timeout 240 --temperature 0 --max-output-tokens 1200
 ```
 
-Run the full aligned validation (992 × 2 = 1,984 calls):
+After selecting the stronger model, run the full aligned validation
+(992 × 3 = 2,976 calls):
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.run_pair \
+python3 -m scripts.mmfakebench_pipeline.run_three \
   --evidence data/evidence/MMFakeBench_1000.jsonl \
   --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
   --image-root data/MMFakeBench_val \
-  --output-dir results/full_992 \
+  --output-dir results/strong_model_full_992 \
+  --smoke-config results/strong_model_smoke/run_config.json \
   --selection first --concurrency 3 --rpm 10 \
-  --timeout 240 --max-retries 1
+  --timeout 240 --max-retries 1 --temperature 0 --max-output-tokens 1200
 ```
 
 Each condition writes checkpointed JSONL results immediately. The runner records the
 caption, local image path, original evidence path, evidence hash, raw response,
-parsed labels, usage, call start time in SGT, duration, and errors. A call is bounded
+parsed labels, selected specialists, prompt/skill hashes, usage, call start time in
+SGT, duration, and errors. The full runner first verifies that the four-sample smoke
+run completed successfully with the same model, settings, evidence, and canonical
+skill files. A call is bounded
 below five minutes; if one exceeds five minutes, new API calls are stopped. Live
 status is written to `results/mmfakebench_status.md`.
 
@@ -78,32 +89,43 @@ Reparse saved responses after parser changes without making API calls:
 
 ```bash
 python3 -m scripts.mmfakebench_pipeline.reparse \
-  results/full_992/baseline.jsonl results/full_992/baseline_reparsed.jsonl
+  results/strong_model_full_992/baseline.jsonl results/strong_model_full_992/baseline_reparsed.jsonl
 python3 -m scripts.mmfakebench_pipeline.reparse \
-  results/full_992/skill.jsonl results/full_992/skill_reparsed.jsonl
+  results/strong_model_full_992/unified.jsonl results/strong_model_full_992/unified_reparsed.jsonl
+python3 -m scripts.mmfakebench_pipeline.reparse \
+  results/strong_model_full_992/routed.jsonl results/strong_model_full_992/routed_reparsed.jsonl
 ```
 
 Compare matched outputs:
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.compare \
-  results/full_992/baseline_reparsed.jsonl \
-  results/full_992/skill_reparsed.jsonl \
-  --output results/full_992/comparison_reparsed.json
+python3 -m scripts.mmfakebench_pipeline.compare_three \
+  results/strong_model_full_992/baseline_reparsed.jsonl \
+  results/strong_model_full_992/unified_reparsed.jsonl \
+  results/strong_model_full_992/routed_reparsed.jsonl \
+  --output results/strong_model_full_992/comparison_reparsed.json
 ```
 
-Create a row-by-row side-by-side summary, including both raw responses:
+Create a row-by-row side-by-side summary, including all three raw responses and the
+routed skill selection:
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.summarize_pair \
-  results/full_992/baseline_reparsed.jsonl \
-  results/full_992/skill_reparsed.jsonl \
-  results/full_992/side_by_side_summary.json
+python3 -m scripts.mmfakebench_pipeline.summarize_three \
+  results/strong_model_full_992/baseline_reparsed.jsonl \
+  results/strong_model_full_992/unified_reparsed.jsonl \
+  results/strong_model_full_992/routed_reparsed.jsonl \
+  results/strong_model_full_992/side_by_side_summary.json
 ```
 
-## Completed run
+The comparison reports binary accuracy and macro-F1, four-way accuracy and macro-F1,
+confusion matrices, each ground-truth distortion slice, real-versus-distortion binary
+cohorts, paired improvements/regressions, and routing-selection statistics.
+The side-by-side summary also indexes representative improvements, regressions,
+all-correct/all-wrong cases, and routed outputs that omitted a skill selection.
 
-The completed run produced 992 rows per condition, 1,984 successful API calls, and
+## Historical two-condition run
+
+The earlier Qwen3-VL-32B run produced 992 rows per condition, 1,984 successful API calls, and
 zero API errors. Two skill responses were truncated before producing parseable labels;
 final paired metrics therefore use the same 990 complete samples:
 

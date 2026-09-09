@@ -9,6 +9,12 @@ CLASS_NAMES = {
     "cross_modal_consistency_distortion": "cross_modal_consistency_distortion",
 }
 
+SPECIALIST_NAMES = (
+    "Check_textual_factuality",
+    "Check_visual_manipulation",
+    "Check_cross_modal_consistency",
+)
+
 
 def parse_prediction(text):
     """Parse explicit output lines, with conservative support for old formats."""
@@ -38,4 +44,21 @@ def parse_prediction(text):
         judgment = "Fake"
     if judgment is None and predicted_class == "real":
         judgment = "Real"
-    return {"predicted_binary": judgment, "predicted_class": predicted_class}
+    selected_skills = []
+    for line in text.splitlines():
+        match = re.match(r"^\s*selected\s+skills?\s*:\s*(.*?)\s*$", line,
+                         flags=re.IGNORECASE)
+        if not match:
+            continue
+        value = match.group(1).lower()
+        selected_skills = [name for name in SPECIALIST_NAMES if name.lower() in value]
+        break
+    confidence = None
+    for line in text.splitlines():
+        match = re.match(r"^\s*confidence\s*:\s*(high|medium|low)\s*[.!]?\s*$",
+                         line, flags=re.IGNORECASE)
+        if match:
+            confidence = match.group(1).title()
+            break
+    return {"predicted_binary": judgment, "predicted_class": predicted_class,
+            "selected_skills": selected_skills, "reported_confidence": confidence}

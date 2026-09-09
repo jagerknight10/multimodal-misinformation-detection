@@ -86,7 +86,6 @@ def main():
     parser.add_argument("--image", default="tmp/trustvl_examples/rumour-sample.jpeg")
     parser.add_argument("--caption", default="The church that survived the California wildfire.")
     parser.add_argument("--model", default=None)
-    parser.add_argument("--skill-path", default=None)
     args = parser.parse_args()
     load_env()
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -95,7 +94,7 @@ def main():
     model = args.model or os.environ.get("OPENAI_MODEL", "gpt-5.4-nano")
 
     for condition, instructions in (("baseline", BASELINE_INSTRUCTIONS),
-                                    ("skill", skill_instructions(args.skill_path))):
+                                    ("skill", skill_instructions())):
         response = run_call(api_key, model, args.image, args.caption, instructions)
         text = output_text(response)
         web_calls = [item for item in response.get("output", [])
