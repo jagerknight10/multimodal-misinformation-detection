@@ -1,4 +1,5 @@
 import argparse
+from collections import Counter
 import json
 
 
@@ -71,6 +72,164 @@ def compare_rows(baseline, skill):
             else None
         )
     return result
+
+
+def compare_conditions(conditions):
+    """Compare two or more conditions on their common, evidence-matched samples."""
+    if "baseline" not in conditions or len(conditions) < 2:
+        raise ValueError("A baseline and at least one comparison condition are required")
+    names = list(conditions)
+    common = set.intersection(*(set(rows) for rows in conditions.values()))
+    common = sorted(common)
+    mismatched_hashes = [
+        key for key in common
+        if len({conditions[name][key].get("evidence_hash") for name in names}) != 1
+    ]
+    if mismatched_hashes:
+        raise ValueError(
+            f"Evidence differs between conditions for {len(mismatched_hashes)} samples")
+    mismatched_bundles = [
+        key for key in common
+        if len({conditions[name][key].get("skill_bundle_hash") for name in names}) != 1
+    ]
+    if mismatched_bundles:
+        raise ValueError(
+            f"Skill bundle differs between conditions for {len(mismatched_bundles)} samples")
+
+    def complete_ids(prediction):
+        return [key for key in common if all(
+            not conditions[name][key].get("error")
+            and conditions[name][key].get(prediction)
+            and conditions[name][key].get(
+                "ground_truth_binary" if prediction == "predicted_binary"
+                else "ground_truth_class")
+            for name in names)]
+
+    binary_ids = complete_ids("predicted_binary")
+    class_ids = complete_ids("predicted_class")
+    binary = {
+        name: _metrics([conditions[name][key] for key in binary_ids],
+                       "predicted_binary", "ground_truth_binary")
+        for name in names
+    }
+    four_way = {
+        name: _metrics([conditions[name][key] for key in class_ids],
+                       "predicted_class", "ground_truth_class")
+        for name in names
+    }
+    for metrics in (binary, four_way):
+        baseline_accuracy = metrics["baseline"]["accuracy"]
+        for name in names:
+            accuracy = metrics[name]["accuracy"]
+            metrics[name]["delta_accuracy_vs_baseline"] = (
+                accuracy - baseline_accuracy
+                if accuracy is not None and baseline_accuracy is not None else None)
+
+    paired_changes = {}
+    for name in names:
+        if name == "baseline":
+            continue
+        binary_improved = binary_worsened = 0
+        for key in binary_ids:
+            base = conditions["baseline"][key]
+            other = conditions[name][key]
+            base_ok = base["predicted_binary"] == base["ground_truth_binary"]
+            other_ok = other["predicted_binary"] == other["ground_truth_binary"]
+            binary_improved += int(other_ok and not base_ok)
+            binary_worsened += int(base_ok and not other_ok)
+        class_improved = class_worsened = 0
+        for key in class_ids:
+            base = conditions["baseline"][key]
+            other = conditions[name][key]
+            base_ok = base["predicted_class"] == base["ground_truth_class"]
+            other_ok = other["predicted_class"] == other["ground_truth_class"]
+            class_improved += int(other_ok and not base_ok)
+            class_worsened += int(base_ok and not other_ok)
+        paired_changes[name] = {
+            "changed_binary_predictions": sum(
+                conditions["baseline"][key].get("predicted_binary") !=
+                conditions[name][key].get("predicted_binary") for key in binary_ids),
+            "binary_improved": binary_improved,
+            "binary_worsened": binary_worsened,
+            "changed_class_predictions": sum(
+                conditions["baseline"][key].get("predicted_class") !=
+                conditions[name][key].get("predicted_class") for key in class_ids),
+            "four_way_improved": class_improved,
+            "four_way_worsened": class_worsened,
+        }
+
+    class_names = (
+        "real", "textual_veracity_distortion", "visual_veracity_distortion",
+        "cross_modal_consistency_distortion",
+    )
+    by_ground_truth_class = {}
+    for class_name in class_names:
+        ids = [key for key in class_ids
+               if conditions["baseline"][key].get("ground_truth_class") == class_name]
+        by_ground_truth_class[class_name] = {
+            "n": len(ids),
+            "binary": {
+                name: _metrics([conditions[name][key] for key in ids],
+                               "predicted_binary", "ground_truth_binary")
+                for name in names
+            },
+            "four_way": {
+                name: _metrics([conditions[name][key] for key in ids],
+                               "predicted_class", "ground_truth_class")
+                for name in names
+            },
+        }
+
+    binary_real_vs_distortion = {}
+    for class_name in class_names[1:]:
+        ids = [key for key in binary_ids if conditions["baseline"][key].get(
+            "ground_truth_class") in {"real", class_name}]
+        binary_real_vs_distortion[class_name] = {
+            name: _metrics([conditions[name][key] for key in ids],
+                           "predicted_binary", "ground_truth_binary")
+            for name in names
+        }
+
+    routing = None
+    if "routed" in conditions:
+        routed_rows = [conditions["routed"][key] for key in common
+                       if not conditions["routed"][key].get("error")]
+        combination_counts = Counter(
+            ", ".join(row.get("selected_skills") or []) or "(none reported)"
+            for row in routed_rows)
+        skill_counts = Counter(
+            skill for row in routed_rows for skill in (row.get("selected_skills") or []))
+        expected = {
+            "textual_veracity_distortion": "Check_textual_factuality",
+            "visual_veracity_distortion": "Check_visual_manipulation",
+            "cross_modal_consistency_distortion": "Check_cross_modal_consistency",
+        }
+        eligible = [row for row in routed_rows if row.get("ground_truth_class") in expected]
+        routing = {
+            "rows": len(routed_rows),
+            "rows_without_reported_selection": sum(
+                not row.get("selected_skills") for row in routed_rows),
+            "selection_combinations": dict(combination_counts),
+            "individual_skill_selections": dict(skill_counts),
+            "gold_distortion_skill_included": sum(
+                expected[row["ground_truth_class"]] in (row.get("selected_skills") or [])
+                for row in eligible),
+            "gold_distortion_rows": len(eligible),
+        }
+
+    return {
+        "schema": "mmfakebench-three-condition-comparison-v1",
+        "condition_rows": {name: len(rows) for name, rows in conditions.items()},
+        "paired_rows": len(common),
+        "paired_complete_binary_rows": len(binary_ids),
+        "paired_complete_four_way_rows": len(class_ids),
+        "binary": binary,
+        "four_way": four_way,
+        "by_ground_truth_class": by_ground_truth_class,
+        "binary_real_vs_distortion": binary_real_vs_distortion,
+        "paired_changes_vs_baseline": paired_changes,
+        "routing": routing,
+    }
 
 
 def main():
