@@ -4,9 +4,9 @@ import os
 from pathlib import Path
 
 from .data import load_evidence, select_stratified
+from .providers import create_client
 from .runner import run_condition, write_manifest
 from .status import StatusWriter
-from .soclaas import SoCLaaSClient
 
 
 def main():
@@ -18,6 +18,7 @@ def main():
                         help="Validation JSON used to align image paths")
     parser.add_argument("--image-root", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--provider", choices=["gemini", "soclaas"], default="gemini")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--selection", choices=["first", "stratified"], default="stratified")
     parser.add_argument("--concurrency", type=int, default=1)
@@ -49,7 +50,8 @@ def main():
     status = StatusWriter(args.status)
     status.start()
     try:
-        client = SoCLaaSClient(timeout=args.timeout, max_retries=args.max_retries,
+        client = create_client(args.provider, timeout=args.timeout,
+                               max_retries=args.max_retries,
                                insecure_tls=args.insecure_tls)
         for condition in ("baseline", "skill"):
             run_condition(records, condition, args.image_root,

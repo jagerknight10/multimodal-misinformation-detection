@@ -3,9 +3,9 @@ from pathlib import Path
 
 from .data import load_evidence, select_stratified
 from .prompts import CONDITIONS
+from .providers import create_client
 from .runner import run_condition, write_manifest
 from .status import StatusWriter
-from .soclaas import SoCLaaSClient
 
 
 def main():
@@ -14,6 +14,7 @@ def main():
     parser.add_argument("--annotations", help="Validation JSON used to align image paths")
     parser.add_argument("--image-root", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--provider", choices=["gemini", "soclaas"], default="gemini")
     parser.add_argument("--condition", choices=[*CONDITIONS, "skill"], required=True,
                         help="'skill' is retained as an alias for 'unified'")
     parser.add_argument("--limit", type=int)
@@ -35,7 +36,8 @@ def main():
     status = StatusWriter(args.status)
     status.start()
     try:
-        client = SoCLaaSClient(timeout=args.timeout, max_retries=args.max_retries,
+        client = create_client(args.provider, timeout=args.timeout,
+                               max_retries=args.max_retries,
                                insecure_tls=args.insecure_tls)
         manifest = Path(args.output).with_name("input_manifest.jsonl")
         write_manifest(records, manifest)

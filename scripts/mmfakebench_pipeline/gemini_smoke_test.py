@@ -29,7 +29,7 @@ def load_env():
 def main():
     load_env()
     key = os.environ.get("GEMINI_API_KEY")
-    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite")
+    model = os.environ.get("GEMINI_MODEL", "gemini-3.7-flash")
     if not key:
         raise SystemExit("GEMINI_API_KEY is missing from .env")
     if not IMAGE.exists():

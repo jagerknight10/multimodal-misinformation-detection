@@ -35,13 +35,15 @@ excluded and recorded in `run_config.json`, leaving 992 aligned records.
 
 ## Configuration
 
-Put the SoCLaaS credentials in the root `.env`:
+Put the Gemini credentials and selected model in the root `.env`:
 
 ```bash
-SOCLAAS_BASE_URL=https://soclaas-api.comp.nus.edu.sg
-SOCLAAS_API_KEY=...
-SOCLAAS_MODEL=qwen3-vl:32b
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-3.7-flash
 ```
+
+The canonical runners default to `--provider gemini`. `--provider soclaas` remains
+available only for reproducing the historical Qwen setup.
 
 ## Commands
 

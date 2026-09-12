@@ -68,6 +68,7 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
     output.parent.mkdir(parents=True, exist_ok=True)
     client = client or SoCLaaSClient(timeout=timeout, max_retries=max_retries,
                                      insecure_tls=insecure_tls)
+    provider = getattr(client, "provider", "unknown")
     instructions = instructions_for_condition(condition)
     prompts = prompt_manifest()
     instructions_hash = prompts["instruction_hashes"][condition]
@@ -81,6 +82,8 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
             raise ValueError(
                 f"Cannot resume {output}: saved model {row.get('model')!r} differs "
                 f"from current model {client.model!r}")
+        if row.get("provider", "unknown") != provider:
+            raise ValueError(f"Cannot resume {output}: provider has changed")
         if row.get("condition") not in compatible_conditions:
             raise ValueError(
                 f"Cannot resume {output}: it contains condition {row.get('condition')!r}")
@@ -113,12 +116,14 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
                   completed=completed_count, pending=len(pending), rpm=rpm,
                   api_calls=api_call_count, errors=0,
                   message="Using one fixed evidence manifest; no live retrieval calls.")
+    print(f"[{condition}] starting: {len(pending)} pending, {completed_count}/{total} already complete",
+          flush=True)
 
     def run_one(record):
         nonlocal completed_count, error_count, api_call_count
         base = {
             "sample_id": record["sample_id"], "index": record["index"],
-            "condition": condition, "model": client.model,
+            "condition": condition, "provider": provider, "model": client.model,
             "image_path": record["image_path"], "text": record["text"],
             "evidence_image_path": record.get("evidence_image_path"),
             "validation_index": record.get("validation_index"),
@@ -177,6 +182,13 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
                           last_call_duration_seconds=base.get("call_duration_seconds", "-"),
                           message=("A call exceeded 5 minutes; stopping new API calls."
                                    if stop_event.is_set() else ""))
+            if base.get("error"):
+                outcome = f"ERROR {base['error']}"
+            else:
+                outcome = (f"{base.get('predicted_binary', 'unparsed')} / "
+                           f"{base.get('predicted_class', 'unparsed')}")
+            print(f"[{condition}] {completed_count}/{total} {record['sample_id']} "
+                  f"{outcome} ({base.get('call_duration_seconds', '-') }s)", flush=True)
         return base
 
     results = []
@@ -197,4 +209,5 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
                   errors=error_count,
                   message=("Stopped because an API call exceeded 5 minutes."
                            if stop_event.is_set() else "Condition complete."))
+    print(f"[{condition}] complete: {completed_count}/{total}, errors={error_count}", flush=True)
     return results

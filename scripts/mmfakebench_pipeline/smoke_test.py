@@ -5,9 +5,9 @@ from pathlib import Path
 
 from .data import load_evidence, select_stratified
 from .experiment import build_run_config, write_run_config
+from .providers import create_client
 from .runner import run_condition, write_manifest
 from .status import StatusWriter
-from .soclaas import SoCLaaSClient
 
 
 def main():
@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--annotations", required=True)
     parser.add_argument("--image-root", required=True)
     parser.add_argument("--output-dir", default="results/smoke")
+    parser.add_argument("--provider", choices=["gemini", "soclaas"], default="gemini")
     parser.add_argument("--rpm", type=float, default=10)
     parser.add_argument("--timeout", type=int, default=240)
     parser.add_argument("--max-retries", type=int, default=1)
@@ -30,11 +31,12 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     write_manifest(records, output_dir / "input_manifest.jsonl")
-    client = SoCLaaSClient(timeout=args.timeout, max_retries=args.max_retries,
+    client = create_client(args.provider, timeout=args.timeout,
+                           max_retries=args.max_retries,
                            insecure_tls=args.insecure_tls)
     config = build_run_config(
         "smoke", args.evidence, args.annotations, args.image_root, len(records),
-        client.model, args.temperature, args.max_output_tokens, args.rpm, 1)
+        client.provider, client.model, args.temperature, args.max_output_tokens, args.rpm, 1)
     write_run_config(config, output_dir)
     status = StatusWriter(args.status)
     status.start()

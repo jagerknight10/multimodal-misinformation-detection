@@ -10,7 +10,7 @@ CONFIG_SCHEMA = "mmfakebench-fixed-skill-experiment-v1"
 
 
 def build_run_config(run_type, evidence, annotations, image_root, sample_count,
-                     model, temperature, max_output_tokens, rpm, concurrency):
+                     provider, model, temperature, max_output_tokens, rpm, concurrency):
     return {
         "schema": CONFIG_SCHEMA,
         "run_type": run_type,
@@ -24,6 +24,7 @@ def build_run_config(run_type, evidence, annotations, image_root, sample_count,
         "retrieval": "fixed_pre_retrieved_evidence_no_live_search",
         "text_evidence_cap": 10,
         "image_evidence_cap": 10,
+        "provider": provider,
         "model": model,
         "temperature": temperature,
         "max_output_tokens": max_output_tokens,
@@ -41,7 +42,7 @@ def write_run_config(config, output_dir):
     if path.exists() and result_files_exist:
         previous = json.loads(path.read_text(encoding="utf-8"))
         guarded = (
-            "schema", "run_type", "model", "temperature", "max_output_tokens",
+            "schema", "run_type", "provider", "model", "temperature", "max_output_tokens",
             "conditions", "evidence", "annotations", "image_root",
             "skill_bundle_hash", "instruction_hashes",
         )
@@ -76,7 +77,7 @@ def validate_completed_smoke(smoke_config_path, expected_config):
     if smoke.get("sample_count") != 4:
         raise ValueError("The prerequisite smoke run must contain four stratified samples")
     guarded = (
-        "schema", "model", "temperature", "max_output_tokens", "conditions",
+        "schema", "provider", "model", "temperature", "max_output_tokens", "conditions",
         "evidence", "annotations", "image_root", "retrieval",
         "text_evidence_cap", "image_evidence_cap", "skill_bundle_hash",
         "skill_file_hashes", "instruction_hashes",

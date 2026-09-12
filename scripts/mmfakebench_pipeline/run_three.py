@@ -6,8 +6,8 @@ from pathlib import Path
 from .data import load_evidence, select_stratified
 from .experiment import (build_run_config, validate_completed_smoke,
                          write_run_config)
+from .providers import create_client
 from .runner import run_condition, write_manifest
-from .soclaas import SoCLaaSClient
 from .status import StatusWriter
 
 
@@ -23,6 +23,7 @@ def main():
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--smoke-config", required=True,
                         help="run_config.json from the completed 4-sample smoke run")
+    parser.add_argument("--provider", choices=["gemini", "soclaas"], default="gemini")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--selection", choices=["first", "stratified"], default="stratified")
     parser.add_argument("--concurrency", type=int, default=1)
@@ -45,11 +46,12 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
     write_manifest(records, output_dir / "input_manifest.jsonl")
 
-    client = SoCLaaSClient(timeout=args.timeout, max_retries=args.max_retries,
+    client = create_client(args.provider, timeout=args.timeout,
+                           max_retries=args.max_retries,
                            insecure_tls=args.insecure_tls)
     config = build_run_config(
         "full", args.evidence, args.annotations, args.image_root, len(records),
-        client.model, args.temperature, args.max_output_tokens,
+        client.provider, client.model, args.temperature, args.max_output_tokens,
         args.rpm, args.concurrency)
     validate_completed_smoke(args.smoke_config, config)
     write_run_config(config, output_dir)
