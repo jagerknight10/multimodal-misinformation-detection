@@ -87,6 +87,9 @@ This is the next phase. It was not run during unified induction, as required
 by the brief. It should reuse the same stratified TRUST-Instruct input and
 persistent-memory loop, but create four separate prompt-ready skills.
 
+The full extraction prompts for the router and all three specialists are in
+`artifacts/specialist_extraction_prompts.md`.
+
 ### Routing skill
 
 **Input:** image, caption, optional direct/inverse/context evidence, and the
