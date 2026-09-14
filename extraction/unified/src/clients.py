@@ -10,22 +10,28 @@ if str(ROOT / "scripts") not in sys.path:
 
 
 class SoCLaaSTextClient:
-    def __init__(self, model=None):
+    def __init__(self, model=None, max_output_tokens=4000):
         from mmfakebench_pipeline.soclaas import SoCLaaSClient
         self._client = SoCLaaSClient(model=model)
         self.model = self._client.model
+        self.max_output_tokens = max_output_tokens
 
     def generate(self, prompt: str) -> str:
         response = self._client.responses_text(
             prompt,
             "Extract workflows from the supplied dataset trajectories. Return only compact requested JSON; do not show reasoning or repeat the trajectories.",
-            max_output_tokens=4000,
+            max_output_tokens=self.max_output_tokens,
         )
         text = self._client.text_from_response(response)
         if not text:
+            shapes = [
+                {"type": item.get("type"),
+                 "content_types": [part.get("type") for part in item.get("content", [])]}
+                for item in response.get("output", [])
+            ]
             raise RuntimeError(
                 f"SOCLaAS returned no visible text (status={response.get('status')!r}, "
-                f"output_items={len(response.get('output', []))})"
+                f"output_items={len(response.get('output', []))}, shapes={shapes!r})"
             )
         return text
 
