@@ -1,0 +1,1 @@
+Cross-modal misinformation verification: decompose the text claim into entities/event/location/date, produce a detailed image description, check image-text consistency, check the image against direct evidence, check the text against inverse evidence (noting when the image matches the inverse evidence instead of the text), then aggregate all checks into a Real/Fake judgement.

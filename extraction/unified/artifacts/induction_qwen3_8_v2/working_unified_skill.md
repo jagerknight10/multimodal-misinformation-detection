@@ -1,0 +1,1 @@
+Cross-modal misinformation verification via a fixed pipeline: decompose the text claim into checkable attributes, describe the image independently, run one reusable pairwise consistency check on the three fixed pairs (image-text, image-direct evidence, text-inverse evidence), and synthesize a Real/Fake verdict.
