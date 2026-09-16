@@ -1,0 +1,1462 @@
+{
+  "schema": "mmfakebench-three-condition-comparison-v1",
+  "condition_rows": {
+    "baseline": 100,
+    "unified": 100,
+    "routed": 100
+  },
+  "paired_rows": 100,
+  "paired_complete_binary_rows": 99,
+  "paired_complete_four_way_rows": 99,
+  "binary": {
+    "baseline": {
+      "n": 99,
+      "accuracy": 0.7676767676767676,
+      "macro_f1": 0.7504657534246575,
+      "per_class": {
+        "Fake": {
+          "precision": 0.8225806451612904,
+          "recall": 0.8095238095238095,
+          "f1": 0.8160000000000001,
+          "support": 63
+        },
+        "Real": {
+          "precision": 0.6756756756756757,
+          "recall": 0.6944444444444444,
+          "f1": 0.684931506849315,
+          "support": 36
+        }
+      },
+      "confusion_matrix_gold_by_prediction": {
+        "Fake": {
+          "Fake": 51,
+          "Real": 12
+        },
+        "Real": {
+          "Fake": 11,
+          "Real": 25
+        }
+      },
+      "delta_accuracy_vs_baseline": 0.0
+    },
+    "unified": {
+      "n": 99,
+      "accuracy": 0.7272727272727273,
+      "macro_f1": 0.66013986013986,
+      "per_class": {
+        "Fake": {
+          "precision": 0.725,
+          "recall": 0.9206349206349206,
+          "f1": 0.8111888111888111,
+          "support": 63
+        },
+        "Real": {
+          "precision": 0.7368421052631579,
+          "recall": 0.3888888888888889,
+          "f1": 0.509090909090909,
+          "support": 36
+        }
+      },
+      "confusion_matrix_gold_by_prediction": {
+        "Fake": {
+          "Fake": 58,
+          "Real": 5
+        },
+        "Real": {
+          "Fake": 22,
+          "Real": 14
+        }
+      },
+      "delta_accuracy_vs_baseline": -0.04040404040404033
+    },
+    "routed": {
+      "n": 99,
+      "accuracy": 0.8080808080808081,
+      "macro_f1": 0.7824175824175823,
+      "per_class": {
+        "Fake": {
+          "precision": 0.8142857142857143,
+          "recall": 0.9047619047619048,
+          "f1": 0.857142857142857,
+          "support": 63
+        },
+        "Real": {
+          "precision": 0.7931034482758621,
+          "recall": 0.6388888888888888,
+          "f1": 0.7076923076923076,
+          "support": 36
+        }
+      },
+      "confusion_matrix_gold_by_prediction": {
+        "Fake": {
+          "Fake": 57,
+          "Real": 6
+        },
+        "Real": {
+          "Fake": 13,
+          "Real": 23
+        }
+      },
+      "delta_accuracy_vs_baseline": 0.04040404040404044
+    }
+  },
+  "four_way": {
+    "baseline": {
+      "n": 99,
+      "accuracy": 0.5555555555555556,
+      "macro_f1": 0.4624060521284619,
+      "per_class": {
+        "cross_modal_consistency_distortion": {
+          "precision": 0.3333333333333333,
+          "recall": 0.07692307692307693,
+          "f1": 0.125,
+          "support": 26
+        },
+        "real": {
+          "precision": 0.6756756756756757,
+          "recall": 0.6944444444444444,
+          "f1": 0.684931506849315,
+          "support": 36
+        },
+        "textual_veracity_distortion": {
+          "precision": 0.6,
+          "recall": 0.7741935483870968,
+          "f1": 0.676056338028169,
+          "support": 31
+        },
+        "visual_veracity_distortion": {
+          "precision": 0.25,
+          "recall": 0.6666666666666666,
+          "f1": 0.36363636363636365,
+          "support": 6
+        }
+      },
+      "confusion_matrix_gold_by_prediction": {
+        "cross_modal_consistency_distortion": {
+          "cross_modal_consistency_distortion": 2,
+          "real": 7,
+          "textual_veracity_distortion": 8,
+          "visual_veracity_distortion": 9
+        },
+        "real": {
+          "cross_modal_consistency_distortion": 2,
+          "real": 25,
+          "textual_veracity_distortion": 8,
+          "visual_veracity_distortion": 1
+        },
+        "textual_veracity_distortion": {
+          "cross_modal_consistency_distortion": 2,
+          "real": 3,
+          "textual_veracity_distortion": 24,
+          "visual_veracity_distortion": 2
+        },
+        "visual_veracity_distortion": {
+          "cross_modal_consistency_distortion": 0,
+          "real": 2,
+          "textual_veracity_distortion": 0,
+          "visual_veracity_distortion": 4
+        }
+      },
+      "delta_accuracy_vs_baseline": 0.0
+    },
+    "unified": {
+      "n": 99,
+      "accuracy": 0.43434343434343436,
+      "macro_f1": 0.41500166500166497,
+      "per_class": {
+        "cross_modal_consistency_distortion": {
+          "precision": 0.2923076923076923,
+          "recall": 0.7307692307692307,
+          "f1": 0.4175824175824176,
+          "support": 26
+        },
+        "real": {
+          "precision": 0.7368421052631579,
+          "recall": 0.3888888888888889,
+          "f1": 0.509090909090909,
+          "support": 36
+        },
+        "textual_veracity_distortion": {
+          "precision": 0.8888888888888888,
+          "recall": 0.25806451612903225,
+          "f1": 0.39999999999999997,
+          "support": 31
+        },
+        "visual_veracity_distortion": {
+          "precision": 0.3333333333333333,
+          "recall": 0.3333333333333333,
+          "f1": 0.3333333333333333,
+          "support": 6
+        }
+      },
+      "confusion_matrix_gold_by_prediction": {
+        "cross_modal_consistency_distortion": {
+          "cross_modal_consistency_distortion": 19,
+          "real": 4,
+          "textual_veracity_distortion": 0,
+          "visual_veracity_distortion": 3
+        },
+        "real": {
+          "cross_modal_consistency_distortion": 20,
+          "real": 14,
+          "textual_veracity_distortion": 1,
+          "visual_veracity_distortion": 1
+        },
+        "textual_veracity_distortion": {
+          "cross_modal_consistency_distortion": 22,
+          "real": 1,
+          "textual_veracity_distortion": 8,
+          "visual_veracity_distortion": 0
+        },
+        "visual_veracity_distortion": {
+          "cross_modal_consistency_distortion": 4,
+          "real": 0,
+          "textual_veracity_distortion": 0,
+          "visual_veracity_distortion": 2
+        }
+      },
+      "delta_accuracy_vs_baseline": -0.12121212121212122
+    },
+    "routed": {
+      "n": 99,
+      "accuracy": 0.5151515151515151,
+      "macro_f1": 0.4788809082483781,
+      "per_class": {
+        "cross_modal_consistency_distortion": {
+          "precision": 0.3333333333333333,
+          "recall": 0.7307692307692307,
+          "f1": 0.45783132530120474,
+          "support": 26
+        },
+        "real": {
+          "precision": 0.7931034482758621,
+          "recall": 0.6388888888888888,
+          "f1": 0.7076923076923076,
+          "support": 36
+        },
+        "textual_veracity_distortion": {
+          "precision": 0.7777777777777778,
+          "recall": 0.22580645161290322,
+          "f1": 0.35000000000000003,
+          "support": 31
+        },
+        "visual_veracity_distortion": {
+          "precision": 0.5,
+          "recall": 0.3333333333333333,
+          "f1": 0.4,
+          "support": 6
+        }
+      },
+      "confusion_matrix_gold_by_prediction": {
+        "cross_modal_consistency_distortion": {
+          "cross_modal_consistency_distortion": 19,
+          "real": 5,
+          "textual_veracity_distortion": 0,
+          "visual_veracity_distortion": 2
+        },
+        "real": {
+          "cross_modal_consistency_distortion": 11,
+          "real": 23,
+          "textual_veracity_distortion": 2,
+          "visual_veracity_distortion": 0
+        },
+        "textual_veracity_distortion": {
+          "cross_modal_consistency_distortion": 23,
+          "real": 1,
+          "textual_veracity_distortion": 7,
+          "visual_veracity_distortion": 0
+        },
+        "visual_veracity_distortion": {
+          "cross_modal_consistency_distortion": 4,
+          "real": 0,
+          "textual_veracity_distortion": 0,
+          "visual_veracity_distortion": 2
+        }
+      },
+      "delta_accuracy_vs_baseline": -0.04040404040404044
+    }
+  },
+  "by_ground_truth_class": {
+    "real": {
+      "n": 36,
+      "binary": {
+        "baseline": {
+          "n": 36,
+          "accuracy": 0.6944444444444444,
+          "macro_f1": 0.4098360655737705,
+          "per_class": {
+            "Fake": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "Real": {
+              "precision": 1.0,
+              "recall": 0.6944444444444444,
+              "f1": 0.819672131147541,
+              "support": 36
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 0,
+              "Real": 0
+            },
+            "Real": {
+              "Fake": 11,
+              "Real": 25
+            }
+          }
+        },
+        "unified": {
+          "n": 36,
+          "accuracy": 0.3888888888888889,
+          "macro_f1": 0.28,
+          "per_class": {
+            "Fake": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "Real": {
+              "precision": 1.0,
+              "recall": 0.3888888888888889,
+              "f1": 0.56,
+              "support": 36
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 0,
+              "Real": 0
+            },
+            "Real": {
+              "Fake": 22,
+              "Real": 14
+            }
+          }
+        },
+        "routed": {
+          "n": 36,
+          "accuracy": 0.6388888888888888,
+          "macro_f1": 0.38983050847457623,
+          "per_class": {
+            "Fake": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "Real": {
+              "precision": 1.0,
+              "recall": 0.6388888888888888,
+              "f1": 0.7796610169491525,
+              "support": 36
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 0,
+              "Real": 0
+            },
+            "Real": {
+              "Fake": 13,
+              "Real": 23
+            }
+          }
+        }
+      },
+      "four_way": {
+        "baseline": {
+          "n": 36,
+          "accuracy": 0.6944444444444444,
+          "macro_f1": 0.20491803278688525,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "real": {
+              "precision": 1.0,
+              "recall": 0.6944444444444444,
+              "f1": 0.819672131147541,
+              "support": 36
+            },
+            "textual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 2,
+              "real": 25,
+              "textual_veracity_distortion": 8,
+              "visual_veracity_distortion": 1
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            }
+          }
+        },
+        "unified": {
+          "n": 36,
+          "accuracy": 0.3888888888888889,
+          "macro_f1": 0.14,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "real": {
+              "precision": 1.0,
+              "recall": 0.3888888888888889,
+              "f1": 0.56,
+              "support": 36
+            },
+            "textual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 20,
+              "real": 14,
+              "textual_veracity_distortion": 1,
+              "visual_veracity_distortion": 1
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            }
+          }
+        },
+        "routed": {
+          "n": 36,
+          "accuracy": 0.6388888888888888,
+          "macro_f1": 0.2598870056497175,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "real": {
+              "precision": 1.0,
+              "recall": 0.6388888888888888,
+              "f1": 0.7796610169491525,
+              "support": 36
+            },
+            "textual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 11,
+              "real": 23,
+              "textual_veracity_distortion": 2
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0
+            }
+          }
+        }
+      }
+    },
+    "textual_veracity_distortion": {
+      "n": 31,
+      "binary": {
+        "baseline": {
+          "n": 31,
+          "accuracy": 0.9032258064516129,
+          "macro_f1": 0.47457627118644063,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.9032258064516129,
+              "f1": 0.9491525423728813,
+              "support": 31
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 28,
+              "Real": 3
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        },
+        "unified": {
+          "n": 31,
+          "accuracy": 0.967741935483871,
+          "macro_f1": 0.4918032786885246,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.967741935483871,
+              "f1": 0.9836065573770492,
+              "support": 31
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 30,
+              "Real": 1
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        },
+        "routed": {
+          "n": 31,
+          "accuracy": 0.967741935483871,
+          "macro_f1": 0.4918032786885246,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.967741935483871,
+              "f1": 0.9836065573770492,
+              "support": 31
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 30,
+              "Real": 1
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        }
+      },
+      "four_way": {
+        "baseline": {
+          "n": 31,
+          "accuracy": 0.7741935483870968,
+          "macro_f1": 0.21818181818181817,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "textual_veracity_distortion": {
+              "precision": 1.0,
+              "recall": 0.7741935483870968,
+              "f1": 0.8727272727272727,
+              "support": 31
+            },
+            "visual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 2,
+              "real": 3,
+              "textual_veracity_distortion": 24,
+              "visual_veracity_distortion": 2
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            }
+          }
+        },
+        "unified": {
+          "n": 31,
+          "accuracy": 0.25806451612903225,
+          "macro_f1": 0.13675213675213674,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "textual_veracity_distortion": {
+              "precision": 1.0,
+              "recall": 0.25806451612903225,
+              "f1": 0.41025641025641024,
+              "support": 31
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 22,
+              "real": 1,
+              "textual_veracity_distortion": 8
+            }
+          }
+        },
+        "routed": {
+          "n": 31,
+          "accuracy": 0.22580645161290322,
+          "macro_f1": 0.12280701754385964,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "textual_veracity_distortion": {
+              "precision": 1.0,
+              "recall": 0.22580645161290322,
+              "f1": 0.3684210526315789,
+              "support": 31
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 23,
+              "real": 1,
+              "textual_veracity_distortion": 7
+            }
+          }
+        }
+      }
+    },
+    "visual_veracity_distortion": {
+      "n": 6,
+      "binary": {
+        "baseline": {
+          "n": 6,
+          "accuracy": 0.6666666666666666,
+          "macro_f1": 0.4,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.6666666666666666,
+              "f1": 0.8,
+              "support": 6
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 4,
+              "Real": 2
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        },
+        "unified": {
+          "n": 6,
+          "accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 6
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 6
+            }
+          }
+        },
+        "routed": {
+          "n": 6,
+          "accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 6
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 6
+            }
+          }
+        }
+      },
+      "four_way": {
+        "baseline": {
+          "n": 6,
+          "accuracy": 0.6666666666666666,
+          "macro_f1": 0.4,
+          "per_class": {
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 1.0,
+              "recall": 0.6666666666666666,
+              "f1": 0.8,
+              "support": 6
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "real": {
+              "real": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "real": 2,
+              "visual_veracity_distortion": 4
+            }
+          }
+        },
+        "unified": {
+          "n": 6,
+          "accuracy": 0.3333333333333333,
+          "macro_f1": 0.25,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 1.0,
+              "recall": 0.3333333333333333,
+              "f1": 0.5,
+              "support": 6
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 4,
+              "visual_veracity_distortion": 2
+            }
+          }
+        },
+        "routed": {
+          "n": 6,
+          "accuracy": 0.3333333333333333,
+          "macro_f1": 0.25,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 1.0,
+              "recall": 0.3333333333333333,
+              "f1": 0.5,
+              "support": 6
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 4,
+              "visual_veracity_distortion": 2
+            }
+          }
+        }
+      }
+    },
+    "cross_modal_consistency_distortion": {
+      "n": 26,
+      "binary": {
+        "baseline": {
+          "n": 26,
+          "accuracy": 0.7307692307692307,
+          "macro_f1": 0.42222222222222217,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.7307692307692307,
+              "f1": 0.8444444444444443,
+              "support": 26
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 19,
+              "Real": 7
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        },
+        "unified": {
+          "n": 26,
+          "accuracy": 0.8461538461538461,
+          "macro_f1": 0.4583333333333333,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.8461538461538461,
+              "f1": 0.9166666666666666,
+              "support": 26
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 22,
+              "Real": 4
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        },
+        "routed": {
+          "n": 26,
+          "accuracy": 0.8076923076923077,
+          "macro_f1": 0.44680851063829785,
+          "per_class": {
+            "Fake": {
+              "precision": 1.0,
+              "recall": 0.8076923076923077,
+              "f1": 0.8936170212765957,
+              "support": 26
+            },
+            "Real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "Fake": {
+              "Fake": 21,
+              "Real": 5
+            },
+            "Real": {
+              "Fake": 0,
+              "Real": 0
+            }
+          }
+        }
+      },
+      "four_way": {
+        "baseline": {
+          "n": 26,
+          "accuracy": 0.07692307692307693,
+          "macro_f1": 0.03571428571428572,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 1.0,
+              "recall": 0.07692307692307693,
+              "f1": 0.14285714285714288,
+              "support": 26
+            },
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "textual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 2,
+              "real": 7,
+              "textual_veracity_distortion": 8,
+              "visual_veracity_distortion": 9
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "textual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "textual_veracity_distortion": 0,
+              "visual_veracity_distortion": 0
+            }
+          }
+        },
+        "unified": {
+          "n": 26,
+          "accuracy": 0.7307692307692307,
+          "macro_f1": 0.28148148148148144,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 1.0,
+              "recall": 0.7307692307692307,
+              "f1": 0.8444444444444443,
+              "support": 26
+            },
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 19,
+              "real": 4,
+              "visual_veracity_distortion": 3
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "visual_veracity_distortion": 0
+            }
+          }
+        },
+        "routed": {
+          "n": 26,
+          "accuracy": 0.7307692307692307,
+          "macro_f1": 0.28148148148148144,
+          "per_class": {
+            "cross_modal_consistency_distortion": {
+              "precision": 1.0,
+              "recall": 0.7307692307692307,
+              "f1": 0.8444444444444443,
+              "support": 26
+            },
+            "real": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            },
+            "visual_veracity_distortion": {
+              "precision": 0.0,
+              "recall": 0.0,
+              "f1": 0.0,
+              "support": 0
+            }
+          },
+          "confusion_matrix_gold_by_prediction": {
+            "cross_modal_consistency_distortion": {
+              "cross_modal_consistency_distortion": 19,
+              "real": 5,
+              "visual_veracity_distortion": 2
+            },
+            "real": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "visual_veracity_distortion": 0
+            },
+            "visual_veracity_distortion": {
+              "cross_modal_consistency_distortion": 0,
+              "real": 0,
+              "visual_veracity_distortion": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "binary_real_vs_distortion": {
+    "textual_veracity_distortion": {
+      "baseline": {
+        "n": 67,
+        "accuracy": 0.7910447761194029,
+        "macro_f1": 0.790625,
+        "per_class": {
+          "Fake": {
+            "precision": 0.717948717948718,
+            "recall": 0.9032258064516129,
+            "f1": 0.8,
+            "support": 31
+          },
+          "Real": {
+            "precision": 0.8928571428571429,
+            "recall": 0.6944444444444444,
+            "f1": 0.78125,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 28,
+            "Real": 3
+          },
+          "Real": {
+            "Fake": 11,
+            "Real": 25
+          }
+        }
+      },
+      "unified": {
+        "n": 67,
+        "accuracy": 0.6567164179104478,
+        "macro_f1": 0.6359555870540987,
+        "per_class": {
+          "Fake": {
+            "precision": 0.5769230769230769,
+            "recall": 0.967741935483871,
+            "f1": 0.7228915662650601,
+            "support": 31
+          },
+          "Real": {
+            "precision": 0.9333333333333333,
+            "recall": 0.3888888888888889,
+            "f1": 0.5490196078431373,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 30,
+            "Real": 1
+          },
+          "Real": {
+            "Fake": 22,
+            "Real": 14
+          }
+        }
+      },
+      "routed": {
+        "n": 67,
+        "accuracy": 0.7910447761194029,
+        "macro_f1": 0.7887387387387388,
+        "per_class": {
+          "Fake": {
+            "precision": 0.6976744186046512,
+            "recall": 0.967741935483871,
+            "f1": 0.810810810810811,
+            "support": 31
+          },
+          "Real": {
+            "precision": 0.9583333333333334,
+            "recall": 0.6388888888888888,
+            "f1": 0.7666666666666666,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 30,
+            "Real": 1
+          },
+          "Real": {
+            "Fake": 13,
+            "Real": 23
+          }
+        }
+      }
+    },
+    "visual_veracity_distortion": {
+      "baseline": {
+        "n": 42,
+        "accuracy": 0.6904761904761905,
+        "macro_f1": 0.5873015873015872,
+        "per_class": {
+          "Fake": {
+            "precision": 0.26666666666666666,
+            "recall": 0.6666666666666666,
+            "f1": 0.3809523809523809,
+            "support": 6
+          },
+          "Real": {
+            "precision": 0.9259259259259259,
+            "recall": 0.6944444444444444,
+            "f1": 0.7936507936507936,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 4,
+            "Real": 2
+          },
+          "Real": {
+            "Fake": 11,
+            "Real": 25
+          }
+        }
+      },
+      "unified": {
+        "n": 42,
+        "accuracy": 0.47619047619047616,
+        "macro_f1": 0.4564705882352942,
+        "per_class": {
+          "Fake": {
+            "precision": 0.21428571428571427,
+            "recall": 1.0,
+            "f1": 0.35294117647058826,
+            "support": 6
+          },
+          "Real": {
+            "precision": 1.0,
+            "recall": 0.3888888888888889,
+            "f1": 0.56,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 6,
+            "Real": 0
+          },
+          "Real": {
+            "Fake": 22,
+            "Real": 14
+          }
+        }
+      },
+      "routed": {
+        "n": 42,
+        "accuracy": 0.6904761904761905,
+        "macro_f1": 0.6298305084745762,
+        "per_class": {
+          "Fake": {
+            "precision": 0.3157894736842105,
+            "recall": 1.0,
+            "f1": 0.4799999999999999,
+            "support": 6
+          },
+          "Real": {
+            "precision": 1.0,
+            "recall": 0.6388888888888888,
+            "f1": 0.7796610169491525,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 6,
+            "Real": 0
+          },
+          "Real": {
+            "Fake": 13,
+            "Real": 23
+          }
+        }
+      }
+    },
+    "cross_modal_consistency_distortion": {
+      "baseline": {
+        "n": 62,
+        "accuracy": 0.7096774193548387,
+        "macro_f1": 0.7069327731092436,
+        "per_class": {
+          "Fake": {
+            "precision": 0.6333333333333333,
+            "recall": 0.7307692307692307,
+            "f1": 0.6785714285714285,
+            "support": 26
+          },
+          "Real": {
+            "precision": 0.78125,
+            "recall": 0.6944444444444444,
+            "f1": 0.7352941176470588,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 19,
+            "Real": 7
+          },
+          "Real": {
+            "Fake": 11,
+            "Real": 25
+          }
+        }
+      },
+      "unified": {
+        "n": 62,
+        "accuracy": 0.5806451612903226,
+        "macro_f1": 0.5735449735449736,
+        "per_class": {
+          "Fake": {
+            "precision": 0.5,
+            "recall": 0.8461538461538461,
+            "f1": 0.6285714285714286,
+            "support": 26
+          },
+          "Real": {
+            "precision": 0.7777777777777778,
+            "recall": 0.3888888888888889,
+            "f1": 0.5185185185185185,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 22,
+            "Real": 4
+          },
+          "Real": {
+            "Fake": 22,
+            "Real": 14
+          }
+        }
+      },
+      "routed": {
+        "n": 62,
+        "accuracy": 0.7096774193548387,
+        "macro_f1": 0.7093749999999999,
+        "per_class": {
+          "Fake": {
+            "precision": 0.6176470588235294,
+            "recall": 0.8076923076923077,
+            "f1": 0.7,
+            "support": 26
+          },
+          "Real": {
+            "precision": 0.8214285714285714,
+            "recall": 0.6388888888888888,
+            "f1": 0.7187499999999999,
+            "support": 36
+          }
+        },
+        "confusion_matrix_gold_by_prediction": {
+          "Fake": {
+            "Fake": 21,
+            "Real": 5
+          },
+          "Real": {
+            "Fake": 13,
+            "Real": 23
+          }
+        }
+      }
+    }
+  },
+  "paired_changes_vs_baseline": {
+    "unified": {
+      "changed_binary_predictions": 26,
+      "binary_improved": 11,
+      "binary_worsened": 15,
+      "changed_class_predictions": 67,
+      "four_way_improved": 20,
+      "four_way_worsened": 32
+    },
+    "routed": {
+      "changed_binary_predictions": 18,
+      "binary_improved": 11,
+      "binary_worsened": 7,
+      "changed_class_predictions": 62,
+      "four_way_improved": 23,
+      "four_way_worsened": 27
+    }
+  },
+  "routing": {
+    "rows": 100,
+    "rows_without_reported_selection": 0,
+    "selection_combinations": {
+      "Check_textual_factuality, Check_visual_manipulation, Check_cross_modal_consistency": 87,
+      "Check_textual_factuality, Check_cross_modal_consistency": 13
+    },
+    "individual_skill_selections": {
+      "Check_textual_factuality": 100,
+      "Check_visual_manipulation": 87,
+      "Check_cross_modal_consistency": 100
+    },
+    "gold_distortion_skill_included": 64,
+    "gold_distortion_rows": 64
+  }
+}
