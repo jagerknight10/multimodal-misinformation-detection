@@ -20,6 +20,15 @@ CANONICAL_SKILL_FILES = {
     "cross_modal": ROOT / "skills/check-cross-modal-consistency/SKILL.md",
 }
 
+FALLBACK_SKILL_FILES = {
+    "evidence_adjudication": ROOT / "extraction/unified/artifacts/final_unified_skill.md",
+    "unified": ROOT / "extraction/unified/artifacts/final_unified_skill.md",
+    "router": ROOT / "extraction/unified/artifacts/specialists/router/SKILL.md",
+    "textual": ROOT / "extraction/unified/artifacts/specialists/textual/SKILL.md",
+    "visual": ROOT / "extraction/unified/artifacts/specialists/visual/SKILL.md",
+    "cross_modal": ROOT / "extraction/unified/artifacts/specialists/cross_modal/SKILL.md",
+}
+
 
 BASELINE_INSTRUCTIONS = """You are evaluating a multimodal misinformation benchmark.
 Use the supplied news caption, image, and pre-retrieved evidence. The evidence block
@@ -59,10 +68,28 @@ def user_prompt(record):
 
 
 def _read_skill(name):
-    return CANONICAL_SKILL_FILES[name].read_text(encoding="utf-8")
+    path = CANONICAL_SKILL_FILES[name]
+    if not path.exists() and name in FALLBACK_SKILL_FILES:
+        path = FALLBACK_SKILL_FILES[name]
+    return path.read_text(encoding="utf-8")
+
+
+def _skill_path(name):
+    path = CANONICAL_SKILL_FILES[name]
+    if not path.exists() and name in FALLBACK_SKILL_FILES:
+        path = FALLBACK_SKILL_FILES[name]
+    return path
 
 
 def _benchmark_evidence_rules():
+    path = CANONICAL_SKILL_FILES["evidence_adjudication"]
+    if not path.exists():
+        return """## Evidence adjudication
+Use only the fixed evidence supplied by the runner. Keep direct evidence for
+image checking separate from inverse evidence for text checking. Filter
+irrelevant items before aggregation. Empty or unavailable evidence is
+non-contributing, not a contradiction. Record support, contradiction, and
+uncertainty separately."""
     text = _read_skill("evidence_adjudication")
     marker = "## Evidence adjudication"
     return marker + text.split(marker, 1)[1]
@@ -74,14 +101,14 @@ def _sha256(text):
 
 def skill_bundle_manifest():
     file_hashes = {
-        name: _sha256(path.read_text(encoding="utf-8"))
-        for name, path in CANONICAL_SKILL_FILES.items()
+        name: _sha256(_skill_path(name).read_text(encoding="utf-8"))
+        for name in CANONICAL_SKILL_FILES
     }
     encoded = json.dumps(file_hashes, sort_keys=True, separators=(",", ":"))
     return {
         "bundle_hash": _sha256(encoded),
-        "files": {name: str(path.relative_to(ROOT))
-                  for name, path in CANONICAL_SKILL_FILES.items()},
+        "files": {name: str(_skill_path(name).relative_to(ROOT))
+                  for name in CANONICAL_SKILL_FILES},
         "file_hashes": file_hashes,
     }
 
@@ -94,7 +121,14 @@ def unified_skill_instructions():
 The runner has already supplied the fixed direct and inverse evidence. Do not execute web search or reverse-image tools in this call and never imply that a search occurred.
 Apply the workflow only to the supplied item. Keep unverified evidence distinct from
 contradiction, use the causal primary-class rules, and finish with the required
-benchmark judgment and primary class lines.""",
+benchmark judgment and primary class lines. Even if the skill's internal
+assessment is inconclusive, map it to the required binary benchmark output.
+Before any analysis, print two plain, unformatted lines with your selected
+values. Then provide the analysis. Do not use Markdown emphasis around labels.
+At the end, repeat the same two plain lines.
+The final two non-empty lines must be exactly:
+Judgement: Real or Fake
+Class: real, textual_veracity_distortion, visual_veracity_distortion, or cross_modal_consistency_distortion""",
     ])
 
 

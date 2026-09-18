@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import random
 from pathlib import Path
 
 CLASS_MAP = {
@@ -123,6 +124,17 @@ def select_stratified(records, limit):
         if not progressed:
             break
     return selected
+
+
+def select_random(records, limit, seed=20260917):
+    """Select a reproducible random subset while preserving source order."""
+    if limit is None or limit >= len(records):
+        return list(records)
+    if limit <= 0:
+        return []
+    rng = random.Random(seed)
+    selected_indices = set(rng.sample(range(len(records)), limit))
+    return [record for index, record in enumerate(records) if index in selected_indices]
 
 
 def load_annotations(path):
