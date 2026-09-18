@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from .data import load_evidence, select_stratified
+from .data import load_evidence, select_random, select_stratified
 from .experiment import (build_run_config, validate_completed_smoke,
                          write_run_config)
 from .providers import create_client
@@ -25,7 +25,9 @@ def main():
                         help="run_config.json from the completed 4-sample smoke run")
     parser.add_argument("--provider", choices=["gemini", "soclaas"], default="gemini")
     parser.add_argument("--limit", type=int)
-    parser.add_argument("--selection", choices=["first", "stratified"], default="stratified")
+    parser.add_argument("--selection", choices=["first", "stratified", "random"], default="stratified")
+    parser.add_argument("--seed", type=int, default=20260917,
+                        help="Seed used for reproducible random selection")
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--rpm", type=float, default=10)
     parser.add_argument("--timeout", type=int, default=240)
@@ -39,8 +41,12 @@ def main():
     records = load_evidence(args.evidence, annotations_path=args.annotations,
                             drop_unmatched=True)
     if args.limit is not None:
-        records = (select_stratified(records, args.limit) if args.selection == "stratified"
-                   else records[:args.limit])
+        if args.selection == "stratified":
+            records = select_stratified(records, args.limit)
+        elif args.selection == "random":
+            records = select_random(records, args.limit, args.seed)
+        else:
+            records = records[:args.limit]
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
