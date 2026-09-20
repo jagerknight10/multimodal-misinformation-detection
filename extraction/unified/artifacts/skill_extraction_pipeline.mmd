@@ -1,0 +1,42 @@
+flowchart TB
+
+    subgraph TOP["MAIN PIPELINE"]
+        direction LR
+        M1["Block 1<br/>TRUST-Instruct data"] --> M2["Block 2<br/>Audit and filter"]
+        M2 --> M3["Block 3<br/>Normalise and group"]
+        M3 --> M4["Block 4<br/>Stratified sampling"]
+        M4 --> M5["Block 5<br/>Bounded batch induction"]
+        M5 --> M6["Block 6<br/>Model extraction"]
+        M6 --> M7["Block 7<br/>Memory and ledgers"]
+        M7 --> M8["Block 8<br/>Final skill"]
+        M8 --> M9["Block 9<br/>MMFakeBench test"]
+    end
+
+    subgraph BOTTOM["EXPLANATIONS OF EACH BLOCK"]
+        direction LR
+        E1["1. Start with complete trajectories:<br/>image, caption, evidence,<br/>instruction, and assistant answer.<br/><br/>1,409,577 raw rows."]
+        E2["2. Keep the 198,248 examples<br/>that teach textual, visual, or<br/>cross-modal misinformation reasoning.<br/>Remove generic image-only rows."]
+        E3["3. Replace case-specific details<br/>such as names, dates, places, URLs,<br/>and numbers. Keep the reasoning steps.<br/><br/>Group by modality and similar<br/>operation sequence."]
+        E4["4. Select stable representatives<br/>within every group.<br/><br/>Keep rare patterns, all three modalities,<br/>and evidence-present and absent cases.<br/><br/>196 groups → 196 representatives."]
+        E5["5. Make small prompts of about<br/>6,500 characters.<br/><br/>196 representatives → 161 batches.<br/>One model call per batch.<br/><br/>The response is limited to compact<br/>structured JSON."]
+        E6["6. Extract reusable workflows:<br/>steps, conditions, evidence rules,<br/>decision criteria, uncertainty,<br/>output format, and row IDs.<br/><br/>The model compares each batch<br/>with the skill built so far."]
+        E7["7. Save results after every batch:<br/>workflow memory, rule ledger,<br/>workflow catalogue, change log,<br/>progress, and response cache.<br/><br/>A failed run resumes without<br/>repeating completed calls."]
+        E8["8. Merge overlapping workflows<br/>and keep only supported patterns.<br/><br/>The final skill contains an ordered<br/>procedure, branches, decision rules,<br/>uncertainty, and provenance."]
+        E9["9. Compare baseline, unified skill,<br/>and routed specialist skills using<br/>the same images and evidence.<br/><br/>Measure accuracy, macro-F1,<br/>class accuracy, routing coverage,<br/>and common errors."]
+        E1 ~~~ E2 ~~~ E3 ~~~ E4 ~~~ E5 ~~~ E6 ~~~ E7 ~~~ E8 ~~~ E9
+    end
+
+    M1 --> E1
+    M2 --> E2
+    M3 --> E3
+    M4 --> E4
+    M5 --> E5
+    M6 --> E6
+    M7 --> E7
+    M8 --> E8
+    M9 --> E9
+
+    classDef main fill:#E9F6EC,stroke:#3A8754,stroke-width:2px,color:#111;
+    classDef detail fill:#FFF8E7,stroke:#A67C00,stroke-width:1.5px,color:#111;
+    class M1,M2,M3,M4,M5,M6,M7,M8,M9 main;
+    class E1,E2,E3,E4,E5,E6,E7,E8,E9 detail;
