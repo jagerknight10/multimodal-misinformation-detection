@@ -1,6 +1,7 @@
 """Shared-evidence, paired-condition benchmark execution."""
 
 import json
+import os
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -15,6 +16,41 @@ from .soclaas import SoCLaaSClient
 
 
 SGT = ZoneInfo("Asia/Singapore")
+
+
+class _Color:
+    """Small ANSI formatter for readable live benchmark output."""
+
+    enabled = (
+        os.environ.get("FORCE_COLOR", "").lower() in {"1", "true", "yes"}
+        or os.environ.get("NO_COLOR", "").lower() not in {"1", "true", "yes"}
+    )
+    reset = "\033[0m"
+    bold = "\033[1m"
+    dim = "\033[2m"
+    red = "\033[31m"
+    green = "\033[32m"
+    yellow = "\033[33m"
+    blue = "\033[34m"
+    cyan = "\033[36m"
+    magenta = "\033[35m"
+
+    @classmethod
+    def wrap(cls, value, colour):
+        value = str(value)
+        return f"{colour}{value}{cls.reset}" if cls.enabled else value
+
+
+def _format_result(condition, completed, total, sample_id, outcome, duration):
+    condition_text = _Color.wrap(f"[{condition}]", _Color.magenta)
+    progress_text = _Color.wrap(f"{completed}/{total}", _Color.cyan)
+    sample_text = _Color.wrap(sample_id, _Color.blue)
+    duration_text = _Color.wrap(f"({duration}s)", _Color.dim)
+    if outcome.startswith("ERROR"):
+        outcome_text = _Color.wrap(outcome, _Color.red)
+    else:
+        outcome_text = _Color.wrap(outcome, _Color.green)
+    return f"{condition_text} {progress_text} {sample_text} {outcome_text} {duration_text}"
 
 
 class RateLimiter:
@@ -47,7 +83,16 @@ def _read_successful(path):
                 row = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if row.get("sample_id") and not row.get("error"):
+            # A completed API call is not necessarily a completed benchmark
+            # item.  Reasoning-capable models can stop after analysis without
+            # emitting the required label lines.  Keep those raw responses for
+            # debugging, but allow the next run to retry them.
+            terminal_unparsed = row.get("error") == "unparsed_prediction"
+            if (row.get("sample_id") and (
+                    terminal_unparsed
+                    or (not row.get("error")
+                        and row.get("predicted_binary")
+                        and row.get("predicted_class")))):
                 completed[row["sample_id"]] = row
     return completed
 
@@ -105,6 +150,9 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
             raise ValueError(
                 f"Cannot resume {output}: output-token limit differs for sample {sample_id}")
     pending = [row for row in records if row["sample_id"] not in prior]
+    terminal_failures = sum(
+        row.get("error") == "unparsed_prediction" for row in prior.values()
+    )
     limiter = RateLimiter(rpm)
     stop_event = threading.Event()
     write_lock = threading.Lock()
@@ -115,9 +163,15 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
     status.update(phase=f"running_{condition}", condition=condition, total=total,
                   completed=completed_count, pending=len(pending), rpm=rpm,
                   api_calls=api_call_count, errors=0,
+                  terminal_failures=terminal_failures,
                   message="Using one fixed evidence manifest; no live retrieval calls.")
-    print(f"[{condition}] starting: {len(pending)} pending, {completed_count}/{total} already complete",
-          flush=True)
+    print(
+        f"{_Color.wrap(f'[{condition}]', _Color.magenta)} starting: "
+        f"{_Color.wrap(len(pending), _Color.yellow)} pending, "
+        f"{_Color.wrap(f'{completed_count}/{total}', _Color.cyan)} already complete; "
+        f"output={_Color.wrap(output.name, _Color.blue)}",
+        flush=True,
+    )
 
     def run_one(record):
         nonlocal completed_count, error_count, api_call_count
@@ -165,6 +219,8 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
                 "usage": response.get("usage"),
             })
             base.update(parse_prediction(base["raw_response"]))
+            if not base.get("predicted_binary") or not base.get("predicted_class"):
+                base["error"] = "unparsed_prediction"
             if duration > 300:
                 base["error"] = "call_exceeded_5_minutes"
                 stop_event.set()
@@ -178,6 +234,10 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
                 error_count += 1
             status.update(completed=completed_count, pending=max(0, total - completed_count),
                           errors=error_count,
+                          terminal_failures=terminal_failures + sum(
+                              result.get("error") == "unparsed_prediction"
+                              for result in results
+                          ),
                           api_calls=api_call_count,
                           last_call_duration_seconds=base.get("call_duration_seconds", "-"),
                           message=("A call exceeded 5 minutes; stopping new API calls."
@@ -187,8 +247,9 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
             else:
                 outcome = (f"{base.get('predicted_binary', 'unparsed')} / "
                            f"{base.get('predicted_class', 'unparsed')}")
-            print(f"[{condition}] {completed_count}/{total} {record['sample_id']} "
-                  f"{outcome} ({base.get('call_duration_seconds', '-') }s)", flush=True)
+            print(_format_result(
+                condition, completed_count, total, record["sample_id"], outcome,
+                base.get("call_duration_seconds", "-")), flush=True)
         return base
 
     results = []
@@ -209,5 +270,12 @@ def run_condition(records, condition, image_root, output, status, rpm=10,
                   errors=error_count,
                   message=("Stopped because an API call exceeded 5 minutes."
                            if stop_event.is_set() else "Condition complete."))
-    print(f"[{condition}] complete: {completed_count}/{total}, errors={error_count}", flush=True)
+    completion_colour = _Color.green if error_count == 0 else _Color.yellow
+    print(
+        f"{_Color.wrap(f'[{condition}]', _Color.magenta)} complete: "
+        f"{_Color.wrap(f'{completed_count}/{total}', _Color.cyan)}, "
+        f"errors={_Color.wrap(error_count, _Color.red if error_count else completion_colour)}; "
+        f"output={_Color.wrap(output.name, _Color.blue)}",
+        flush=True,
+    )
     return results

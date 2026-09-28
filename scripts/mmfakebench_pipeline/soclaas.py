@@ -172,6 +172,13 @@ class SoCLaaSClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+        # Qwen 3.5 emits a long hidden reasoning trace by default. The trace
+        # can consume the entire completion budget before the benchmark labels
+        # are produced, so disable extended thinking for evaluation calls.
+        if self.model.startswith("qwen3.5"):
+            payload["chat_template_kwargs"] = {"enable_thinking": False}
+            payload["think"] = False
+            payload["reasoning_effort"] = "none"
         started = time.monotonic()
         response = self._post("chat/completions", payload)
         response["_runtime_seconds"] = round(time.monotonic() - started, 3)
@@ -193,7 +200,19 @@ class SoCLaaSClient:
         choices = response.get("choices", [])
         if not choices:
             return ""
-        content = choices[0].get("message", {}).get("content", "")
+        message = choices[0].get("message", {})
+        content = message.get("content", "")
         if isinstance(content, str):
-            return content
-        return "\n".join(part.get("text", "") for part in content if isinstance(part, dict))
+            if content.strip():
+                return content
+            # Some reasoning-capable chat models place the full response in a
+            # separate reasoning field and leave content empty.
+            reasoning = message.get("reasoning", "")
+            return reasoning if isinstance(reasoning, str) else ""
+        extracted = "\n".join(
+            part.get("text", "") for part in content if isinstance(part, dict)
+        )
+        if extracted.strip():
+            return extracted
+        reasoning = message.get("reasoning", "")
+        return reasoning if isinstance(reasoning, str) else ""
