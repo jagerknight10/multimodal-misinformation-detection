@@ -21,12 +21,23 @@ def parse_prediction(text):
     normalized = text.lower()
     judgment = None
     for line in normalized.splitlines():
-        match = re.match(r"^\s*judg(?:e)?ment\s*:\s*(real|fake)\s*[.!]?\s*$", line)
+        # Models sometimes add Markdown emphasis or the harmless prefix
+        # "Final" to the required label.  Normalize that presentation while
+        # keeping the value itself explicit.
+        clean_line = re.sub(r"[*`]+", "", line).strip()
+        match = re.match(
+            r"^\s*(?:final\s+)?judg(?:e)?ment\s*:\s*(real|fake)\s*[.!]?\s*$",
+            clean_line,
+        )
         if match:
             judgment = match.group(1).title()
     predicted_class = None
     for line in normalized.splitlines():
-        match = re.match(r"^\s*(?:primary\s+)?class\s*:\s*([^.!]+?)\s*[.!]?\s*$", line)
+        clean_line = re.sub(r"[*`]+", "", line).strip()
+        match = re.match(
+            r"^\s*(?:primary\s+)?class\s*:\s*([^.!]+?)\s*[.!]?\s*$",
+            clean_line,
+        )
         if not match:
             continue
         value = match.group(1).strip().replace(" ", "_").replace("-", "_")
@@ -44,6 +55,10 @@ def parse_prediction(text):
         judgment = "Fake"
     if judgment is None and predicted_class == "real":
         judgment = "Real"
+    # A real judgement has no distortion subtype.  If a model omits only the
+    # redundant four-way class line, this is an unambiguous safe recovery.
+    if judgment == "Real" and predicted_class is None:
+        predicted_class = "real"
     selected_skills = []
     for line in text.splitlines():
         match = re.match(r"^\s*selected\s+skills?\s*:\s*(.*?)\s*$", line,
