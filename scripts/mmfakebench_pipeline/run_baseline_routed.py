@@ -23,9 +23,11 @@ def main():
     parser.add_argument("--limit", type=int)
     parser.add_argument("--selection", choices=["first", "stratified"], default="stratified")
     parser.add_argument("--concurrency", type=int, default=1)
-    parser.add_argument("--rpm", type=float, default=10)
+    parser.add_argument("--rpm", type=float, default=4,
+                        help="Requests per minute; conservative Gemini default.")
     parser.add_argument("--timeout", type=int, default=240)
-    parser.add_argument("--max-retries", type=int, default=1)
+    parser.add_argument("--max-retries", type=int, default=2,
+                        help="Retries use server-directed exponential backoff.")
     parser.add_argument("--max-output-tokens", type=int, default=2400)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--status", default="results/mmfakebench_status.md")

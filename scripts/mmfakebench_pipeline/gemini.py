@@ -4,6 +4,7 @@ import base64
 import json
 import mimetypes
 import os
+import re
 import ssl
 import time
 import urllib.error
@@ -77,18 +78,34 @@ class GeminiClient:
                 if exc.code not in {408, 429, 500, 502, 503, 504} or attempt >= self.max_retries:
                     print(f"[gemini] HTTP {exc.code}: {detail[:300]}", flush=True)
                     raise GeminiError(f"HTTP {exc.code}: {detail[:1000]}") from exc
-                delay = min(60, 2 ** attempt)
+                delay = self._retry_delay(exc.code, detail, attempt)
                 print(f"[gemini] HTTP {exc.code}; retry {attempt + 1}/{self.max_retries} "
-                      f"in {delay}s: {detail[:220]}", flush=True)
+                      f"in {delay:.1f}s: {detail[:220]}", flush=True)
             except (urllib.error.URLError, TimeoutError) as exc:
                 if attempt >= self.max_retries:
                     print(f"[gemini] network error: {exc}", flush=True)
                     raise GeminiError(str(exc)) from exc
-                delay = min(60, 2 ** attempt)
+                delay = min(120.0, 15.0 * (2 ** attempt))
                 print(f"[gemini] network error; retry {attempt + 1}/{self.max_retries} "
-                      f"in {delay}s: {exc}", flush=True)
+                      f"in {delay:.1f}s: {exc}", flush=True)
             time.sleep(delay)
         raise GeminiError("request failed")
+
+    @staticmethod
+    def _retry_delay(status, detail, attempt):
+        """Honor Gemini's suggested quota delay before retrying."""
+        retry_after = None
+        match = re.search(r"Please retry in\s+([0-9]+(?:\.[0-9]+)?)s", detail,
+                          flags=re.IGNORECASE)
+        if match:
+            retry_after = float(match.group(1))
+        if status == 429:
+            # Quota responses commonly include a server-provided delay. Keep a
+            # conservative floor so an immediate retry cannot amplify quota use.
+            return max(30.0, retry_after or 60.0)
+        if status in {500, 502, 503, 504, 408}:
+            return max(15.0, retry_after or 15.0 * (2 ** attempt))
+        return 30.0
 
     @staticmethod
     def text_from_chat_response(response):

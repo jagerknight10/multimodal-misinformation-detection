@@ -153,8 +153,14 @@ def routed_skill_instructions():
     sections.append("""BENCHMARK EXECUTION CONSTRAINTS:
 The runner has already supplied the fixed direct and inverse evidence. Do not execute
 web search, reverse-image search, or any other retrieval tool, and never imply that a
-search occurred unless the supplied evidence says so. Route and execute the selected
-workflow(s) internally in this single response.
+search occurred unless the supplied evidence says so. Routing is an internal step:
+do not return a routing plan alone. After selecting one or more specialists, execute
+each selected specialist workflow, aggregate its findings, and produce the final
+judgement in this same response. Do not repeat the routing decision or evidence list.
+
+Keep the explanation concise: do not repeat the evidence list and keep the analysis
+under 500 words so the required output contract is reached within the model's output
+budget. If space is limited, prioritize the specialist findings and final labels.
 
 Follow the routed output contract and end with exactly these three lines:
 Selected skills: <comma-separated exact specialist identifiers>
