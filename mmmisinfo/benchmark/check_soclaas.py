@@ -1,4 +1,4 @@
-from mmfakebench_pipeline.soclaas import SoCLaaSClient, SoCLaaSError
+from .soclaas import SoCLaaSClient, SoCLaaSError
 
 client = SoCLaaSClient()
 

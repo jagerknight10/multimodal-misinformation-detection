@@ -31,7 +31,7 @@ def inspect_generic_image_instructions(cache_dir, limit=100):
 
 if __name__ == "__main__":
     # Using a local cache directory within the project's temp folder
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     cache_dir = os.path.join(script_dir, ".cache")
     os.makedirs(cache_dir, exist_ok=True)
     print(f"Using cache directory: {cache_dir}")

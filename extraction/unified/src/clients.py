@@ -1,17 +1,8 @@
 """Model client adapters for live and offline extraction."""
 
-from pathlib import Path
-import sys
-
-
-ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT / "scripts") not in sys.path:
-    sys.path.insert(0, str(ROOT / "scripts"))
-
-
 class SoCLaaSTextClient:
     def __init__(self, model=None, max_output_tokens=4000):
-        from mmfakebench_pipeline.soclaas import SoCLaaSClient
+        from mmmisinfo.benchmark.soclaas import SoCLaaSClient
         self._client = SoCLaaSClient(model=model)
         self.model = self._client.model
         self.max_output_tokens = max_output_tokens

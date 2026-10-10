@@ -1,14 +1,14 @@
 import argparse
 import json
-import os
+from pathlib import Path
 from collections import Counter
 
-from trust_instruct_utils import final_judgment, instruction_family, load_train
+from .trust_instruct_utils import final_judgment, instruction_family, load_train
 
 
 def main():
     parser = argparse.ArgumentParser(description="Check TRUST-Instruct record consistency and artifacts.")
-    parser.add_argument("--cache-dir", default=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".cache"))
+    parser.add_argument("--cache-dir", default=str(Path(__file__).resolve().parents[2] / ".cache"))
     parser.add_argument("--limit", type=int, default=None)
     args = parser.parse_args()
 

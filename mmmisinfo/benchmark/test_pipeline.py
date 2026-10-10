@@ -15,7 +15,7 @@ try:
     from .runner import run_condition
     from .status import StatusWriter
     from .summarize_three import summarize
-except ImportError:  # Allows unittest discovery with -s scripts/mmfakebench_pipeline.
+except ImportError:  # Allows unittest discovery from this package directory.
     from compare import compare_conditions, compare_rows
     from data import load_evidence, select_stratified
     from experiment import (build_run_config, validate_completed_smoke,
@@ -110,7 +110,8 @@ class PipelineTests(unittest.TestCase):
         client = FakeClient()
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
-            image = Path("tmp/pdfs/visual/trust.png").resolve()
+            image = directory / "trust.png"
+            image.touch()
             evidence_path = directory / "evidence.jsonl"
             rows = []
             classes = ("original", "textual_veracity_distortion",
@@ -128,7 +129,7 @@ class PipelineTests(unittest.TestCase):
             records = load_evidence(evidence_path)
             smoke_config = build_run_config(
                 "smoke", evidence_path, directory / "annotations.json", image.parent,
-                4, client.model, 0.0, 1200, 0, 1)
+                4, "soclaas", client.model, 0.0, 1200, 0, 1)
             smoke_config_path = write_run_config(smoke_config, directory)
             status = StatusWriter(directory / "status.md", interval=1)
             status.start()
@@ -156,7 +157,7 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(routed[0]["selected_skills"], ["Check_textual_factuality"])
             full_config = build_run_config(
                 "full", evidence_path, directory / "annotations.json", image.parent,
-                992, client.model, 0.0, 1200, 10, 3)
+                992, "soclaas", client.model, 0.0, 1200, 10, 3)
             checked = validate_completed_smoke(smoke_config_path, full_config)
             self.assertEqual(checked["calls"], 12)
             self.assertIn("Last updated (SGT)", (directory / "status.md").read_text())
@@ -185,11 +186,12 @@ class PipelineTests(unittest.TestCase):
             status = StatusWriter(directory / "status.md", interval=1)
             status.start()
             output = directory / "baseline.jsonl"
+            (directory / "trust.png").touch()
             try:
-                run_condition([record], "baseline", Path("tmp/pdfs/visual"), output,
+                run_condition([record], "baseline", directory, output,
                               status, rpm=0, client=first_client)
                 with self.assertRaises(ValueError):
-                    run_condition([record], "baseline", Path("tmp/pdfs/visual"), output,
+                    run_condition([record], "baseline", directory, output,
                                   status, rpm=0, client=second_client)
             finally:
                 status.close(phase="test_done")
@@ -245,7 +247,7 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("Check_textual_factuality", routed)
         self.assertIn("Check_visual_manipulation", routed)
         self.assertIn("Check_cross_modal_consistency", routed)
-        self.assertIn("single response", routed)
+        self.assertIn("same response", routed)
         self.assertEqual(instructions_for_condition("skill"), skill_instructions())
         with self.assertRaises(ValueError):
             instructions_for_condition("unknown")

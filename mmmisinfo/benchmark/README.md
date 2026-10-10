@@ -50,13 +50,13 @@ available only for reproducing the historical Qwen setup.
 Run the ten offline tests (these use a fake client and make no API calls):
 
 ```bash
-python3 -m unittest scripts.mmfakebench_pipeline.test_pipeline -v
+python3 -m unittest mmmisinfo.benchmark.test_pipeline -v
 ```
 
 Run the 12-call smoke test (4 stratified records × 3 conditions):
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.smoke_test \
+python3 -m mmmisinfo.benchmark.smoke_test \
   --evidence data/evidence/MMFakeBench_1000.jsonl \
   --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
   --image-root data/MMFakeBench_val \
@@ -68,7 +68,7 @@ After selecting the stronger model, run the full aligned validation
 (992 × 3 = 2,976 calls):
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.run_three \
+python3 -m mmmisinfo.benchmark.run_three \
   --evidence data/evidence/MMFakeBench_1000.jsonl \
   --annotations data/MMFakeBench_val/source/MMFakeBench_val.json \
   --image-root data/MMFakeBench_val \
@@ -90,18 +90,18 @@ status is written to `results/mmfakebench_status.md`.
 Reparse saved responses after parser changes without making API calls:
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.reparse \
+python3 -m mmmisinfo.benchmark.reparse \
   results/strong_model_full_992/baseline.jsonl results/strong_model_full_992/baseline_reparsed.jsonl
-python3 -m scripts.mmfakebench_pipeline.reparse \
+python3 -m mmmisinfo.benchmark.reparse \
   results/strong_model_full_992/unified.jsonl results/strong_model_full_992/unified_reparsed.jsonl
-python3 -m scripts.mmfakebench_pipeline.reparse \
+python3 -m mmmisinfo.benchmark.reparse \
   results/strong_model_full_992/routed.jsonl results/strong_model_full_992/routed_reparsed.jsonl
 ```
 
 Compare matched outputs:
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.compare_three \
+python3 -m mmmisinfo.benchmark.compare_three \
   results/strong_model_full_992/baseline_reparsed.jsonl \
   results/strong_model_full_992/unified_reparsed.jsonl \
   results/strong_model_full_992/routed_reparsed.jsonl \
@@ -112,7 +112,7 @@ Create a row-by-row side-by-side summary, including all three raw responses and 
 routed skill selection:
 
 ```bash
-python3 -m scripts.mmfakebench_pipeline.summarize_three \
+python3 -m mmmisinfo.benchmark.summarize_three \
   results/strong_model_full_992/baseline_reparsed.jsonl \
   results/strong_model_full_992/unified_reparsed.jsonl \
   results/strong_model_full_992/routed_reparsed.jsonl \

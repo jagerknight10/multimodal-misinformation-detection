@@ -1,9 +1,9 @@
 import argparse
 import json
-import os
+from pathlib import Path
 from collections import Counter
 
-from trust_instruct_utils import (
+from .trust_instruct_utils import (
     base_summary,
     evidence_tags,
     final_judgment,
@@ -16,7 +16,7 @@ from trust_instruct_utils import (
 
 def main():
     parser = argparse.ArgumentParser(description="Summarize TRUST-Instruct layout and instruction types.")
-    parser.add_argument("--cache-dir", default=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".cache"))
+    parser.add_argument("--cache-dir", default=str(Path(__file__).resolve().parents[2] / ".cache"))
     parser.add_argument("--limit", type=int, default=None, help="Inspect only the first N rows.")
     args = parser.parse_args()
 

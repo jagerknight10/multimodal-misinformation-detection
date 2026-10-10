@@ -1,8 +1,8 @@
 import argparse
 import json
-import os
+from pathlib import Path
 
-from trust_instruct_utils import instruction_family, load_train
+from .trust_instruct_utils import instruction_family, load_train
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
         default="cross_modal",
     )
     parser.add_argument("--n", type=int, default=10)
-    parser.add_argument("--cache-dir", default=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".cache"))
+    parser.add_argument("--cache-dir", default=str(Path(__file__).resolve().parents[2] / ".cache"))
     parser.add_argument("--output", help="Optional JSON output path.")
     args = parser.parse_args()
 
